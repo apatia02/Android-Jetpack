@@ -1,1 +1,1 @@
-C:\Users\Aydar\StudioProjects\AndroidJetpack\buildSrc\build\classes\kotlin\main\Versions.class
+C:\Users\Aydar\StudioProjects\AndroidJetpack\buildSrc\build\classes\kotlin\main\CommonModule.class;C:\Users\Aydar\StudioProjects\AndroidJetpack\buildSrc\build\classes\kotlin\main\DiModule.class

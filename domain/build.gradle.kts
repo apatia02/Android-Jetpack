@@ -1,7 +1,6 @@
 plugins {
-    id("com.android.application")
-    id("dagger.hilt.android.plugin")
-}
-android {
-    apply(file("../commonModule.gradle"))
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
+    di_module
+    common_module
 }

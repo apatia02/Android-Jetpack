@@ -1,17 +1,14 @@
 plugins {
-    id("com.android.application")
-    id("dagger.hilt.android.plugin")
-}
-android {
-    apply(file("../commonModule.gradle"))
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
+    di_module
+    common_module
 }
 
 dependencies {
-    //noinspection GradleDependency
     implementation(project(":domain"))
-    implementation(project(":base_resources"))
-    implementation("com.squareup.retrofit2:retrofit:${Versions.retrofitVersion}") // Retrofit
-    implementation("com.squareup.retrofit2:converter-gson:${Versions.retrofitVersion}") // Gson Converter
-    implementation("androidx.room:room-runtime:${Versions.roomVersion}") // Room
-    annotationProcessor("androidx.room:room-compiler:${Versions.roomVersion}") // Room annotation processor
+    implementation(libs.retrofitLib) // Retrofit
+    implementation(libs.gsonConverter) // Gson Converter
+    implementation(libs.roomRuntime) // Room
+    kapt(libs.roomCompiler) // Room annotation processor
 }

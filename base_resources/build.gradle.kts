@@ -1,10 +1,8 @@
 plugins {
-    id("com.android.application")
-    id("dagger.hilt.android.plugin")
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
 }
-android {
-    apply(file("../commonModule.gradle"))
-}
+
 dependencies {
-    implementation("com.google.android.material:material:${Versions.materialVersion}")
+    implementation(libs.materialLib)
 }

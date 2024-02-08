@@ -1,14 +1,21 @@
 plugins {
-    id("com.android.application")
-    id("dagger.hilt.android.plugin")
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
+    di_module
+    common_module
 }
 android {
-    apply(file("../commonModule.gradle"))
     buildFeatures {
         viewBinding = true
     }
 }
-dependencies{
+dependencies {
     implementation(project(":domain"))
     implementation(project(":base_resources"))
+    implementation(libs.glideLib)
+    implementation(libs.lifecycleViewModel)
+    implementation(libs.pagingRuntime)
+    implementation(libs.materialLib)
+    implementation(libs.appCompatLib)
+    implementation(libs.fragment)
 }

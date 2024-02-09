@@ -20,4 +20,6 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":presentation"))
     implementation(project(":base_resources"))
+    implementation(libs.retrofitLib)
+    implementation(libs.gsonConverter)
 }

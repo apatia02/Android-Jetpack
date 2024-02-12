@@ -27,18 +27,28 @@
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_edit_text"
                 android:hint="@string/hint_filter"
+                android:paddingHorizontal="50dp"
                 android:paddingVertical="10dp"
-                android:paddingStart="50dp"
-                android:paddingEnd="16dp"
                 android:textAppearance="@style/Text" />
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
                 android:layout_marginStart="26dp"
+                android:layout_marginTop="18dp"
                 android:contentDescription="@null"
                 android:src="@drawable/search_icon" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginStart="26dp"
+                android:layout_marginTop="18dp"
+                android:layout_marginEnd="26dp"
+                android:contentDescription="@null"
+                android:src="@drawable/close_icon"
+                android:visibility="gone" />
 
             <ProgressBar
                 android:id="@+id/progressBar"

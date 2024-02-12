@@ -19,4 +19,5 @@ dependencies {
     implementation(libs.appCompatLib)
     implementation(libs.fragment)
     implementation (libs.easyadapter)
+    implementation(libs.swipeRefresh)
 }

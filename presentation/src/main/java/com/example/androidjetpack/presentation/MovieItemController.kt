@@ -38,9 +38,9 @@ class MovieItemController() :
             setDescriptionListener()
         }
         private fun formatRussianDate(inputDate: String): String {
-            val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
+            val inputFormatter = DateTimeFormatter.ofPattern(ENGLISH_DATE_PATTERN, Locale.ENGLISH)
             val date = LocalDate.parse(inputDate, inputFormatter)
-            val outputFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale("ru"))
+            val outputFormatter = DateTimeFormatter.ofPattern(RUSSIAN_DATE_PATTERN, Locale(RUSSIAN))
             return date.format(outputFormatter)
         }
 
@@ -55,5 +55,11 @@ class MovieItemController() :
                 }
             })
         }
+    }
+
+    private companion object{
+        const val ENGLISH_DATE_PATTERN = "yyyy-MM-dd"
+        const val RUSSIAN_DATE_PATTERN = "d MMMM yyyy"
+        const val RUSSIAN = "ru"
     }
 }

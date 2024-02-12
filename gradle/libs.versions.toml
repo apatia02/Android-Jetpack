@@ -21,10 +21,12 @@ coreKtx = "1.7.0"
 junit = "4.13.2"
 junitExt = "1.1.5"
 espresso = "3.5.1"
+easyadapter = "7.1.0-228"
 
 
 [libraries]
 androidxKtx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+easyadapter = { group = "ru.surfstudio.android", name = "easyadapter", version.ref = "easyadapter" }
 kotlinStdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 glideLib = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 retrofitLib = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }

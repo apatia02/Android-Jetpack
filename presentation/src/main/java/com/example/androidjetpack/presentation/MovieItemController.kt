@@ -9,9 +9,6 @@ import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.presentation.databinding.ItemFilmBinding
 import ru.surfstudio.android.easyadapter.controller.BindableItemController
 import ru.surfstudio.android.easyadapter.holder.BindableViewHolder
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 class MovieItemController() :
     BindableItemController<Movie, MovieItemController.Holder>() {
@@ -26,7 +23,7 @@ class MovieItemController() :
 
         private val binding = ItemFilmBinding.bind(itemView)
 
-        override fun bind(movie: Movie):Unit = with(binding) {
+        override fun bind(movie: Movie): Unit = with(binding) {
             titleTv.text = movie.title
             descriptionTv.text = movie.description
             val heartRes = if (movie.isFavourite) drawable.heart_filled else drawable.heart_outlined
@@ -34,17 +31,11 @@ class MovieItemController() :
             Glide.with(itemView)
                 .load(movie.posterPath)
                 .into(posterIv)
-            dateTv.text = formatRussianDate(movie.releaseDate)
+            dateTv.text = movie.releaseDate
             setDescriptionListener()
         }
-        private fun formatRussianDate(inputDate: String): String {
-            val inputFormatter = DateTimeFormatter.ofPattern(ENGLISH_DATE_PATTERN, Locale.ENGLISH)
-            val date = LocalDate.parse(inputDate, inputFormatter)
-            val outputFormatter = DateTimeFormatter.ofPattern(RUSSIAN_DATE_PATTERN, Locale(RUSSIAN))
-            return date.format(outputFormatter)
-        }
 
-        private fun setDescriptionListener() = with(binding.descriptionTv){
+        private fun setDescriptionListener() = with(binding.descriptionTv) {
             viewTreeObserver.addOnGlobalLayoutListener(object :
                 ViewTreeObserver.OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
@@ -55,11 +46,5 @@ class MovieItemController() :
                 }
             })
         }
-    }
-
-    private companion object{
-        const val ENGLISH_DATE_PATTERN = "yyyy-MM-dd"
-        const val RUSSIAN_DATE_PATTERN = "d MMMM yyyy"
-        const val RUSSIAN = "ru"
     }
 }

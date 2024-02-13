@@ -4,6 +4,9 @@ import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.MovieList
 import com.example.androidjetpack.domain.repository.FavoriteMoviesRepository
 import com.example.androidjetpack.domain.repository.MovieRepository
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -23,16 +26,31 @@ class MoviesUseCase @Inject constructor(
         } else {
             moviesRepository.searchMovies(query)
         }
-        return listMovie.setFavoriteStatusForMovies()
+        return listMovie.setFavoriteStatusAndRussianDate()
     }
 
     /**
      * Установка у фильмов статуса избранности
+     * Установка русской даты для фильмов
      */
-    private suspend fun MovieList.setFavoriteStatusForMovies(): MovieList =
+    private suspend fun MovieList.setFavoriteStatusAndRussianDate(): MovieList =
         this.copy(listMovie = this.listMovie.map { movie ->
             movie.copy(
-                isFavourite = favoriteMoviesRepository.isMovieFavorite(movie.id)
+                isFavourite = favoriteMoviesRepository.isMovieFavorite(movie.id),
+                releaseDate = movie.releaseDate.formatRussianDate()
             )
         })
+
+    private fun String.formatRussianDate(): String {
+        val inputFormatter = DateTimeFormatter.ofPattern(ENGLISH_DATE_PATTERN, Locale.ENGLISH)
+        val date = LocalDate.parse(this, inputFormatter)
+        val outputFormatter = DateTimeFormatter.ofPattern(RUSSIAN_DATE_PATTERN, Locale(RUSSIAN))
+        return date.format(outputFormatter)
+    }
+
+    private companion object {
+        const val ENGLISH_DATE_PATTERN = "yyyy-MM-dd"
+        const val RUSSIAN_DATE_PATTERN = "d MMMM yyyy"
+        const val RUSSIAN = "ru"
+    }
 }

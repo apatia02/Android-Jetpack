@@ -11,4 +11,5 @@ dependencies {
     implementation(libs.gsonConverter) // Gson Converter
     implementation(libs.roomRuntime) // Room
     kapt(libs.roomCompiler) // Room annotation processor
+    implementation(libs.logging)
 }

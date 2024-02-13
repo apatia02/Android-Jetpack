@@ -1,6 +1,7 @@
 [versions]
 compileSdk = "33"
 applicationId = "com.example.androidjetpack"
+loggingInterceptor = "4.9.2"
 minSdk = "26"
 targetSdk = "33"
 versionCode = "1"
@@ -27,6 +28,7 @@ espresso = "3.5.1"
 androidxKtx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 kotlinStdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 glideLib = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
+logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 retrofitLib = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 gsonConverter = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 roomRuntime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }

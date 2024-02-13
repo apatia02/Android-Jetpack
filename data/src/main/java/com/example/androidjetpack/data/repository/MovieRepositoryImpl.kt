@@ -1,7 +1,7 @@
 package com.example.androidjetpack.data.repository
 
 import com.example.androidjetpack.data.mappers.transformInMovieList
-import com.example.androidjetpack.data.retrofit.MovieApi
+import com.example.androidjetpack.data.movie.MovieApi
 import com.example.androidjetpack.domain.entity.MovieList
 import com.example.androidjetpack.domain.repository.MovieRepository
 import javax.inject.Inject
@@ -9,7 +9,8 @@ import javax.inject.Inject
 /**
  * Репозиторий для получения фильмов
  */
-class MovieRepositoryImpl @Inject constructor(private val movieApi: MovieApi) : MovieRepository {
+internal class MovieRepositoryImpl @Inject constructor(private val movieApi: MovieApi) :
+    MovieRepository {
 
     /**
      * Запрос на получение фильмов

@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.retrofitLib) // Retrofit
     implementation(libs.gsonConverter) // Gson Converter
     implementation(libs.roomRuntime) // Room
+    implementation(libs.roomKtx) // Room Coroutines
     kapt(libs.roomCompiler) // Room annotation processor
     implementation(libs.logging)
 }

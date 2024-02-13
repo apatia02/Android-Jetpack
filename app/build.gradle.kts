@@ -22,4 +22,6 @@ dependencies {
     implementation(project(":base_resources"))
     implementation(libs.retrofitLib)
     implementation(libs.gsonConverter)
+    implementation(libs.roomRuntime)
+    kapt(libs.roomCompiler)
 }

@@ -1,7 +1,7 @@
 package com.example.androidjetpack.data.mappers
 
-import com.example.androidjetpack.data.retrofit.MovieDto
-import com.example.androidjetpack.data.retrofit.MovieListDto
+import com.example.androidjetpack.data.movie.MovieDto
+import com.example.androidjetpack.data.movie.MovieListDto
 import com.example.androidjetpack.domain.DEFAULT_DOUBLE
 import com.example.androidjetpack.domain.DEFAULT_INT
 import com.example.androidjetpack.domain.EMPTY_STRING
@@ -11,7 +11,7 @@ import com.example.androidjetpack.domain.entity.MovieList
 /**
  * Маппер для трансформации dto в доменную модель фильма
  */
-fun MovieDto.transformInMovie(): Movie = Movie(
+internal fun MovieDto.transformInMovie(): Movie = Movie(
     adult = this.adult ?: false,
     backdropPath = this.backdropPath ?: EMPTY_STRING,
     genreIds = this.genreIds ?: emptyList(),
@@ -31,7 +31,7 @@ fun MovieDto.transformInMovie(): Movie = Movie(
 /**
  * Маппер для трансформации dto в доменную модель списка фильмов
  */
-fun MovieListDto.transformInMovieList(): MovieList = MovieList(
+internal fun MovieListDto.transformInMovieList(): MovieList = MovieList(
     page = this.page ?: DEFAULT_INT,
     listMovie = this.listMovie?.map { it.transformInMovie() } ?: emptyList(),
     totalPage = this.totalPage ?: DEFAULT_INT,

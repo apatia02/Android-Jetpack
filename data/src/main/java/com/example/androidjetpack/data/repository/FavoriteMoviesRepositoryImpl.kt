@@ -1,15 +1,14 @@
 package com.example.androidjetpack.data.repository
 
-import com.example.androidjetpack.data.room.FavoriteMovieEntity
-import com.example.androidjetpack.data.room.FavoriteMoviesDao
+import com.example.androidjetpack.data.movie.FavoriteMovieEntity
+import com.example.androidjetpack.data.movie.FavoriteMoviesDao
 import com.example.androidjetpack.domain.repository.FavoriteMoviesRepository
 import javax.inject.Inject
 
 /**
  * Репозиторий, свзянный с избранными фильмами
  */
-
-class FavoriteMoviesRepositoryImpl @Inject constructor(
+internal class FavoriteMoviesRepositoryImpl @Inject constructor(
     private val favoriteMoviesDao: FavoriteMoviesDao
 ) : FavoriteMoviesRepository {
 

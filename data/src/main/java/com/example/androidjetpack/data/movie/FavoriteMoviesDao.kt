@@ -1,4 +1,4 @@
-package com.example.androidjetpack.data.room
+package com.example.androidjetpack.data.movie
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -10,7 +10,7 @@ import androidx.room.Query
  * Дао для избранных фильмов
  */
 @Dao
-interface FavoriteMoviesDao {
+internal interface FavoriteMoviesDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addFavoriteMovie(favoriteMovie: FavoriteMovieEntity)

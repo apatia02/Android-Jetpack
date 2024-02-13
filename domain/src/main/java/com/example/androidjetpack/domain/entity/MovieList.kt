@@ -4,6 +4,10 @@ import com.example.androidjetpack.domain.DEFAULT_INT
 
 /**
  * Доменная модель списка фильмов
+ * @property page Номер страницы результата.
+ * @property listMovie Список объектов фильмов.
+ * @property totalPage Общее количество страниц результатов.
+ * @property totalResults Общее количество результатов.
  */
 data class MovieList(
     val page: Int = DEFAULT_INT,

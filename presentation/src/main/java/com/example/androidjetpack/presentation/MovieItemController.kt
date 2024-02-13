@@ -30,6 +30,7 @@ class MovieItemController() :
             heartIv.setImageResource(heartRes)
             Glide.with(itemView)
                 .load(movie.posterPath)
+                .placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate
             setDescriptionListener()

@@ -1,8 +1,6 @@
 package com.example.androidjetpack.presentation
 
-import android.text.TextUtils
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import com.bumptech.glide.Glide
 import com.example.androidjetpack.base_resources.R.drawable
 import com.example.androidjetpack.domain.entity.Movie
@@ -33,19 +31,6 @@ class MovieItemController() :
                 .placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate
-            setDescriptionListener()
-        }
-
-        private fun setDescriptionListener() = with(binding.descriptionTv) {
-            viewTreeObserver.addOnGlobalLayoutListener(object :
-                ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    val noOfLinesVisible: Int = height / lineHeight
-                    maxLines = noOfLinesVisible
-                    ellipsize = TextUtils.TruncateAt.END
-                }
-            })
         }
     }
 }

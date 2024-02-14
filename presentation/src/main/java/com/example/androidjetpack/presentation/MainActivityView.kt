@@ -7,17 +7,23 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isGone
 import androidx.core.view.marginBottom
 import androidx.lifecycle.lifecycleScope
 import com.example.androidjetpack.base_resources.R.string
+import com.example.androidjetpack.domain.EMPTY_STRING
+import com.example.androidjetpack.presentation.UiConstants.PROGRESS_FINISH
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
 import com.example.androidjetpack.presentation.loading_state.ErrorStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadViewState
 import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresentation
 import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import ru.surfstudio.android.easyadapter.EasyAdapter
+import ru.surfstudio.android.easyadapter.ItemList
 
 @AndroidEntryPoint
 class MainActivityView : AppCompatActivity() {
@@ -27,12 +33,21 @@ class MainActivityView : AppCompatActivity() {
     private var loadStatePresentation: LoadStatePresentation? = null
 
     private val viewModel: MainViewModel by viewModels()
+
+    private val adapter = EasyAdapter()
+
+    private val itemController = MovieItemController { showSnackBarMovie(title = it) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        init()
+    }
+
+    private fun init() {
         binding.container.insetKeyBoardMargin()
         setObservers()
+        setRecyclerView()
     }
 
     /**
@@ -63,6 +78,52 @@ class MainActivityView : AppCompatActivity() {
                 updateStatePresentation(currentState)
             }
         }
+        lifecycleScope.launch {
+            viewModel.movies.collect { movies ->
+                adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.progressRequest.collect { progress ->
+                binding.progressBar.progress = progress
+                binding.progressBar.isGone = !viewModel.hasData || progress == PROGRESS_FINISH
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.snackError.collect {
+                if (it) {
+                    showSnackBarError()
+                }
+            }
+        }
+    }
+
+    private fun getMovies(query: String) {
+        lifecycleScope.launch {
+            viewModel.getMovies(query)
+        }
+    }
+
+    private fun setRecyclerView() {
+        binding.moviesRv.adapter = adapter
+    }
+
+    private fun showSnackBarError() {
+        val snackBar = Snackbar.make(
+            binding.container,
+            string.error_message_snack,
+            Snackbar.LENGTH_SHORT
+        )
+        snackBar.show()
+    }
+
+    private fun showSnackBarMovie(title: String) {
+        val snackBar = Snackbar.make(
+            binding.container,
+            title,
+            Snackbar.LENGTH_SHORT
+        )
+        snackBar.show()
     }
 
     private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {
@@ -78,16 +139,14 @@ class MainActivityView : AppCompatActivity() {
 
             LoadViewState.NOTHING_FOUND -> {
                 loadStatePresentation = NotFoundStatePresentation(
-                    placeHolder,
-                    getString(string.nothing_found_message, filterEt.text)
+                    placeHolder, getString(string.nothing_found_message, filterEt.text)
                 )
                 loadStatePresentation?.showState()
             }
 
             LoadViewState.ERROR -> {
-                loadStatePresentation = ErrorStatePresentation(placeHolder) {
-                    //todo добавить повторную загрузку данных
-                }
+                loadStatePresentation =
+                    ErrorStatePresentation(placeHolder) { getMovies(EMPTY_STRING) }
                 loadStatePresentation?.showState()
             }
         }

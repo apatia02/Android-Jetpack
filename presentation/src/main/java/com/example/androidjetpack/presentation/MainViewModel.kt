@@ -38,12 +38,15 @@ class MainViewModel @Inject constructor(
     private val _query = MutableStateFlow(EMPTY_STRING)
     val query = _query.asStateFlow()
 
+    private val _swrIsVisible = MutableStateFlow(false)
+    val swrIsVisible = _swrIsVisible.asStateFlow()
+
     val hasData: Boolean
         get() = _movies.value.listMovie.isNotEmpty()
 
-    suspend fun getMovies(query: String) {
+    suspend fun getMovies(query: String, isSwr: Boolean = false) {
         if (hasData) {
-            getMoviesHasData(query)
+            getMoviesHasData(query, isSwr)
         } else {
             getMoviesHasNotData(query)
         }
@@ -67,9 +70,12 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getMoviesHasData(query: String) {
+    private suspend fun getMoviesHasData(query: String, isSwr: Boolean) {
         try {
             startProgress()
+            if (isSwr) {
+                _swrIsVisible.value = true
+            }
             withContext(Dispatchers.IO) {
                 _movies.value = moviesUseCase.getMovies(query)
             }
@@ -80,6 +86,7 @@ class MainViewModel @Inject constructor(
             showSnackError()
         } finally {
             _progressRequest.value = PROGRESS_FINISH
+            _swrIsVisible.value = false
         }
     }
 

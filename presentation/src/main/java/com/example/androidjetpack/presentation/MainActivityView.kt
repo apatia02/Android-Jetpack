@@ -85,6 +85,7 @@ class MainActivityView : AppCompatActivity() {
             clearFilterBtn.isGone = newText.toString().isEmpty()
         }
         clearFilterBtn.setOnClickListener { clearFilter() }
+        swipeRefresh.setOnRefreshListener { getMovies(isSwr = true) }
     }
 
     private fun clearFilter() = with(binding) {
@@ -132,11 +133,16 @@ class MainActivityView : AppCompatActivity() {
                     viewModel.getMovies(it)
                 }
         }
+        lifecycleScope.launch {
+            viewModel.swrIsVisible.collect {
+                swipeRefresh.isRefreshing = it
+            }
+        }
     }
 
-    private fun getMovies() {
+    private fun getMovies(isSwr: Boolean = false) {
         lifecycleScope.launch {
-            viewModel.getMovies(viewModel.query.value)
+            viewModel.getMovies(viewModel.query.value, isSwr)
         }
     }
 

@@ -42,6 +42,9 @@ class MoviesUseCase @Inject constructor(
         })
 
     private fun String.formatRussianDate(): String {
+        if (this.isEmpty()) {
+            return EMPTY_STRING
+        }
         val inputFormatter = DateTimeFormatter.ofPattern(ENGLISH_DATE_PATTERN, Locale.ENGLISH)
         val date = LocalDate.parse(this, inputFormatter)
         val outputFormatter = DateTimeFormatter.ofPattern(RUSSIAN_DATE_PATTERN, Locale(RUSSIAN))

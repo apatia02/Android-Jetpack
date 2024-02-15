@@ -58,11 +58,11 @@ class PlaceHolderViewContainer(
     }
 
     fun show() {
-        fadeIn(DEFAULT_DURATION, ALPHA_FULL)
+        visibility = View.VISIBLE
     }
 
     fun hide() {
-        fadeOut(DEFAULT_DURATION, View.GONE, ALPHA_FULL)
+        visibility = View.GONE
     }
 
     private fun moveOnTop() {
@@ -76,18 +76,4 @@ fun PlaceHolderViewContainer.setClickableAndFocusable(value: Boolean) {
     isClickable = value
     isFocusable = value
     isFocusableInTouchMode = value
-}
-
-private fun View.fadeIn(duration: Long, alpha: Float) {
-    animate()
-        .alpha(alpha)
-        .setDuration(duration)
-        .setListener(null)
-}
-
-private fun View.fadeOut(duration: Long, visibility: Int, alpha: Float) {
-    animate()
-        .alpha(alpha)
-        .setDuration(duration)
-        .withEndAction { this.visibility = visibility }
 }

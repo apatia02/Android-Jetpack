@@ -1,14 +1,17 @@
 package com.example.androidjetpack.presentation
 
+import android.app.Activity
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.marginBottom
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
@@ -21,6 +24,8 @@ import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresen
 import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import ru.surfstudio.android.easyadapter.EasyAdapter
 import ru.surfstudio.android.easyadapter.ItemList
@@ -48,6 +53,8 @@ class MainActivityView : AppCompatActivity() {
         binding.container.insetKeyBoardMargin()
         setObservers()
         setRecyclerView()
+        setListeners()
+        clearFilter()
     }
 
     /**
@@ -72,7 +79,27 @@ class MainActivityView : AppCompatActivity() {
         }
     }
 
-    private fun setObservers() {
+    private fun setListeners() = with(binding) {
+        filterEt.addTextChangedListener { newText ->
+            viewModel.setNewQuery(newText.toString())
+            clearFilterBtn.isGone = newText.toString().isEmpty()
+        }
+        clearFilterBtn.setOnClickListener { clearFilter() }
+    }
+
+    private fun clearFilter() = with(binding) {
+        filterEt.setText(EMPTY_STRING)
+        filterEt.clearFocus()
+        hideSoftKeyboard()
+    }
+
+    private fun hideSoftKeyboard() = with(binding) {
+        val imm =
+            container.context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(container.windowToken, 0)
+    }
+
+    private fun setObservers() = with(binding) {
         lifecycleScope.launch {
             viewModel.currentState.collect { currentState ->
                 updateStatePresentation(currentState)
@@ -85,8 +112,9 @@ class MainActivityView : AppCompatActivity() {
         }
         lifecycleScope.launch {
             viewModel.progressRequest.collect { progress ->
-                binding.progressBar.progress = progress
-                binding.progressBar.isGone = !viewModel.hasData || progress == PROGRESS_FINISH
+                progressBar.progress = progress
+                progressBar.isGone = !viewModel.hasData || progress == PROGRESS_FINISH
+                if (progress == PROGRESS_FINISH) moviesRv.scrollToPosition(0)
             }
         }
         lifecycleScope.launch {
@@ -96,11 +124,19 @@ class MainActivityView : AppCompatActivity() {
                 }
             }
         }
+        lifecycleScope.launch {
+            viewModel.query
+                .debounce(UiConstants.TIMEOUT_FILTER)
+                .distinctUntilChanged()
+                .collect {
+                    viewModel.getMovies(it)
+                }
+        }
     }
 
-    private fun getMovies(query: String) {
+    private fun getMovies() {
         lifecycleScope.launch {
-            viewModel.getMovies(query)
+            viewModel.getMovies(viewModel.query.value)
         }
     }
 
@@ -128,9 +164,7 @@ class MainActivityView : AppCompatActivity() {
 
     private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {
         when (currentState) {
-            LoadViewState.NONE -> {
-                loadStatePresentation?.hideState()
-            }
+            LoadViewState.NONE -> loadStatePresentation?.hideState()
 
             LoadViewState.LOADING -> {
                 loadStatePresentation = TransparentLoadingStatePresentation(placeHolder)
@@ -139,14 +173,14 @@ class MainActivityView : AppCompatActivity() {
 
             LoadViewState.NOTHING_FOUND -> {
                 loadStatePresentation = NotFoundStatePresentation(
-                    placeHolder, getString(string.nothing_found_message, filterEt.text)
+                    placeHolder, getString(string.nothing_found_message, viewModel.query.value)
                 )
                 loadStatePresentation?.showState()
             }
 
             LoadViewState.ERROR -> {
                 loadStatePresentation =
-                    ErrorStatePresentation(placeHolder) { getMovies(EMPTY_STRING) }
+                    ErrorStatePresentation(placeHolder) { getMovies() }
                 loadStatePresentation?.showState()
             }
         }

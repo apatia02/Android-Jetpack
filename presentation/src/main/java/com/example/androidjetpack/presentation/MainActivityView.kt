@@ -41,7 +41,10 @@ class MainActivityView : AppCompatActivity() {
 
     private val adapter = EasyAdapter()
 
-    private val itemController = MovieItemController { showSnackBarMovie(title = it) }
+    private val itemController =
+        MovieItemController(onClickListener = { showSnackBarMovie(title = it) },
+            changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) })
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainViewBinding.inflate(layoutInflater)
@@ -126,10 +129,7 @@ class MainActivityView : AppCompatActivity() {
             }
         }
         lifecycleScope.launch {
-            viewModel.query
-                .debounce(UiConstants.TIMEOUT_FILTER)
-                .distinctUntilChanged()
-                .collect {
+            viewModel.query.debounce(UiConstants.TIMEOUT_FILTER).distinctUntilChanged().collect {
                     viewModel.getMovies(it)
                 }
         }
@@ -152,18 +152,14 @@ class MainActivityView : AppCompatActivity() {
 
     private fun showSnackBarError() {
         val snackBar = Snackbar.make(
-            binding.container,
-            string.error_message_snack,
-            Snackbar.LENGTH_SHORT
+            binding.container, string.error_message_snack, Snackbar.LENGTH_SHORT
         )
         snackBar.show()
     }
 
     private fun showSnackBarMovie(title: String) {
         val snackBar = Snackbar.make(
-            binding.container,
-            title,
-            Snackbar.LENGTH_SHORT
+            binding.container, title, Snackbar.LENGTH_SHORT
         )
         snackBar.show()
     }
@@ -185,8 +181,7 @@ class MainActivityView : AppCompatActivity() {
             }
 
             LoadViewState.ERROR -> {
-                loadStatePresentation =
-                    ErrorStatePresentation(placeHolder) { getMovies() }
+                loadStatePresentation = ErrorStatePresentation(placeHolder) { getMovies() }
                 loadStatePresentation?.showState()
             }
         }

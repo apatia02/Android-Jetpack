@@ -1,8 +1,10 @@
 package com.example.androidjetpack.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.MovieList
+import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
 import com.example.androidjetpack.domain.use_case.MoviesUseCase
 import com.example.androidjetpack.presentation.UiConstants.PROGRESS_FINISH
 import com.example.androidjetpack.presentation.UiConstants.PROGRESS_STEP
@@ -15,12 +17,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val moviesUseCase: MoviesUseCase
+    private val moviesUseCase: MoviesUseCase,
+    private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase
 ) : ViewModel() {
 
     private val _currentState = MutableStateFlow(NONE)
@@ -100,5 +104,11 @@ class MainViewModel @Inject constructor(
     private fun showSnackError() {
         _snackError.value = true
         _snackError.value = false
+    }
+
+    fun changeFavouriteStatus(movieId: Int) {
+        viewModelScope.launch {
+            changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
+        }
     }
 }

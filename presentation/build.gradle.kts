@@ -18,4 +18,5 @@ dependencies {
     implementation(libs.materialLib)
     implementation(libs.appCompatLib)
     implementation(libs.fragment)
+    implementation (libs.easyadapter)
 }

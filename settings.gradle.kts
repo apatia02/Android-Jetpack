@@ -10,7 +10,8 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         google()
-        maven{setUrl("https://jitpack.io")}
+        maven { setUrl("https://jitpack.io") }
+        maven { setUrl("https://artifactory.surfstudio.ru/artifactory/libs-release-local") }
     }
 }
 

@@ -18,5 +18,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:gravity="center"
-        android:textAppearance="@style/Text.Message"/>
+        android:textAppearance="@style/Text"
+        android:textColor="@color/grey" />
 </LinearLayout>

@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-const val ALPHA_FULL = 1f
-const val DEFAULT_DURATION = 0L
-const val STATE_TOGGLE_DELAY_MS = 250L
+private const val ALPHA_FULL = 1f
+private const val DEFAULT_DURATION = 0L
+private const val STATE_TOGGLE_DELAY_MS = 250L
 
 /**
  * Контейнер для отображения состояний загрузки
@@ -51,6 +51,7 @@ class PlaceHolderViewContainer(
         super.onDetachedFromWindow()
 
         stateJob?.cancel()
+        stateJob = null
     }
 
     fun changeViewTo(view: View) {
@@ -69,8 +70,6 @@ class PlaceHolderViewContainer(
         elevation = Float.MAX_VALUE
     }
 }
-
-data class StatePresentation(val stateView: View)
 
 fun PlaceHolderViewContainer.setClickableAndFocusable(value: Boolean) {
     isClickable = value

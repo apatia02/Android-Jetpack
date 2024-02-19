@@ -15,14 +15,14 @@ internal class MovieRepositoryImpl @Inject constructor(private val movieApi: Mov
     /**
      * Запрос на получение фильмов
      */
-    override suspend fun getMovies(): MovieList {
-        return movieApi.getMovies().transformInMovieList()
+    override suspend fun getMovies(page:Int): MovieList {
+        return movieApi.getMovies(page).transformInMovieList()
     }
 
     /**
      * Запрос на получение фильтрованного списка фильмов
      */
-    override suspend fun searchMovies(query: String): MovieList {
-        return movieApi.searchMovies(query).transformInMovieList()
+    override suspend fun searchMovies(query: String, page:Int): MovieList {
+        return movieApi.searchMovies(query, page).transformInMovieList()
     }
 }

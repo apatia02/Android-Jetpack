@@ -1,5 +1,6 @@
 package com.example.androidjetpack.presentation
 
+import com.example.androidjetpack.presentation.adapter.MovieAdapter
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
@@ -13,22 +14,27 @@ import androidx.core.view.isGone
 import androidx.core.view.marginBottom
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.presentation.UiConstants.PROGRESS_FINISH
+import com.example.androidjetpack.presentation.adapter.MovieLoadStateAdapter
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
 import com.example.androidjetpack.presentation.loading_state.ErrorStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadViewState
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.LOADING
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
 import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresentation
 import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import ru.surfstudio.android.easyadapter.EasyAdapter
-import ru.surfstudio.android.easyadapter.ItemList
 
 @AndroidEntryPoint
 class MainActivityView : AppCompatActivity() {
@@ -39,11 +45,12 @@ class MainActivityView : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
-    private val adapter = EasyAdapter()
-
-    private val itemController =
-        MovieItemController(onClickListener = { showSnackBarMovie(title = it) },
+    private val movieAdapter =
+        MovieAdapter(onClickListener = { showSnackBarMovie(title = it) },
             changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) })
+
+    private val hasData: Boolean
+        get() = movieAdapter.itemCount > 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,9 +61,9 @@ class MainActivityView : AppCompatActivity() {
 
     private fun init() {
         binding.container.insetKeyBoardMargin()
+        setListeners()
         setObservers()
         setRecyclerView()
-        setListeners()
         clearFilter()
     }
 
@@ -88,7 +95,42 @@ class MainActivityView : AppCompatActivity() {
             clearFilterBtn.isGone = newText.toString().isEmpty()
         }
         clearFilterBtn.setOnClickListener { clearFilter() }
-        swipeRefresh.setOnRefreshListener { getMovies(isSwr = true) }
+        swipeRefresh.setOnRefreshListener {
+            viewModel.setSwrLoadingVisible()
+            viewModel.refreshData()
+        }
+        movieAdapter.addLoadStateListener { loadState ->
+            when (loadState.refresh) {
+                is LoadState.Loading -> {
+                    if (hasData) {
+                        viewModel.startLoadingHasData()
+                    } else {
+                        viewModel.setLoadingState(LOADING)
+                    }
+                    moviesRv.scrollToPosition(0)
+                }
+
+                is LoadState.Error -> {
+                    if (hasData) {
+                        showSnackBarError()
+                    } else {
+                        viewModel.setLoadingState(ERROR)
+                    }
+                    viewModel.finishLoading()
+                }
+
+                is LoadState.NotLoading -> {
+                    if (viewModel.currentState.value == LOADING || viewModel.progressRequest.value > 0) {
+                        if (hasData) {
+                            viewModel.setLoadingState(NONE)
+                        } else {
+                            viewModel.setLoadingState(NOTHING_FOUND)
+                        }
+                        viewModel.finishLoading()
+                    }
+                }
+            }
+        }
     }
 
     private fun clearFilter() = with(binding) {
@@ -109,28 +151,25 @@ class MainActivityView : AppCompatActivity() {
                 updateStatePresentation(currentState)
             }
         }
+
         lifecycleScope.launch {
-            viewModel.movies.collect { movies ->
-                adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
+            viewModel.movies.collectLatest {
+                movieAdapter.submitData(it)
             }
         }
+
         lifecycleScope.launch {
             viewModel.progressRequest.collect { progress ->
                 progressBar.progress = progress
-                progressBar.isGone = !viewModel.hasData || progress == PROGRESS_FINISH
-                if (progress == PROGRESS_FINISH) moviesRv.scrollToPosition(0)
+                progressBar.isGone = !hasData || progress == PROGRESS_FINISH
             }
         }
         lifecycleScope.launch {
-            viewModel.snackError.collect {
-                if (it) {
-                    showSnackBarError()
-                }
-            }
-        }
-        lifecycleScope.launch {
-            viewModel.query.debounce(UiConstants.TIMEOUT_FILTER).distinctUntilChanged().collect {
-                    viewModel.getMovies(it)
+            viewModel.query
+                .debounce(UiConstants.TIMEOUT_FILTER)
+                .distinctUntilChanged()
+                .collect {
+                    viewModel.refreshData()
                 }
         }
         lifecycleScope.launch {
@@ -140,14 +179,9 @@ class MainActivityView : AppCompatActivity() {
         }
     }
 
-    private fun getMovies(isSwr: Boolean = false) {
-        lifecycleScope.launch {
-            viewModel.getMovies(viewModel.query.value, isSwr)
-        }
-    }
-
     private fun setRecyclerView() {
-        binding.moviesRv.adapter = adapter
+        binding.moviesRv.adapter =
+            movieAdapter.withLoadStateFooter(footer = MovieLoadStateAdapter { movieAdapter.retry() })
     }
 
     private fun showSnackBarError() {
@@ -166,22 +200,23 @@ class MainActivityView : AppCompatActivity() {
 
     private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {
         when (currentState) {
-            LoadViewState.NONE -> loadStatePresentation?.hideState()
+            NONE -> loadStatePresentation?.hideState()
 
-            LoadViewState.LOADING -> {
+            LOADING -> {
                 loadStatePresentation = TransparentLoadingStatePresentation(placeHolder)
                 loadStatePresentation?.showState()
             }
 
-            LoadViewState.NOTHING_FOUND -> {
+            NOTHING_FOUND -> {
                 loadStatePresentation = NotFoundStatePresentation(
                     placeHolder, getString(string.nothing_found_message, viewModel.query.value)
                 )
                 loadStatePresentation?.showState()
             }
 
-            LoadViewState.ERROR -> {
-                loadStatePresentation = ErrorStatePresentation(placeHolder) { getMovies() }
+            ERROR -> {
+                loadStatePresentation =
+                    ErrorStatePresentation(placeHolder) { viewModel.refreshData() }
                 loadStatePresentation?.showState()
             }
         }

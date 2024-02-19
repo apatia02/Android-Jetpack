@@ -3,5 +3,6 @@
     <string name="hint_filter">Поиск по названию фильма</string>
     <string name="nothing_found_message">По запросу \"%1$s\" \n ничего не найдено</string>
     <string name="error_message">Нам не удалось обработать \n ваш запрос. Пробуйте еще раз.</string>
+    <string name="error_invalid_type">Invalid view type</string>
     <string name="error_message_snack">Проверьте соединение с интернетом и попробуйте еще раз</string>
 </resources>

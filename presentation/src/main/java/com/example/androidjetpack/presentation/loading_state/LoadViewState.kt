@@ -5,7 +5,8 @@ package com.example.androidjetpack.presentation.loading_state
  */
 enum class LoadViewState {
     NONE,
-    LOADING,
+    MAIN_LOADING,
+    TRANSPARENT_LOADING,
     NOTHING_FOUND,
-    ERROR
+    ERROR,
 }

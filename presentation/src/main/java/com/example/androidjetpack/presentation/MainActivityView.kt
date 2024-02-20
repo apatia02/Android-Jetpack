@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isGone
 import androidx.core.view.marginBottom
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
@@ -58,7 +59,6 @@ class MainActivityView : AppCompatActivity() {
         setRecyclerView()
         setObservers()
         setListeners()
-        clearFilter()
     }
 
     /**
@@ -102,23 +102,25 @@ class MainActivityView : AppCompatActivity() {
         imm.hideSoftInputFromWindow(container.windowToken, 0)
     }
 
-    private fun setObservers() = with(binding) {
+    private fun setObservers() {
+        setMovieObserves()
+        setStateScreenObserves()
+    }
+
+    private fun setStateScreenObserves() {
         lifecycleScope.launch {
             viewModel.currentState.collect { currentState ->
                 updateStatePresentation(currentState)
             }
         }
         lifecycleScope.launch {
-            viewModel.movies.collect { movies ->
-                adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
-            }
-        }
-
-        lifecycleScope.launch {
             viewModel.snackError.collect {
                 showSnackBarError()
             }
         }
+    }
+
+    private fun setMovieObserves() {
         lifecycleScope.launch {
             viewModel.query
                 .debounce(UiConstants.TIMEOUT_FILTER)
@@ -127,11 +129,17 @@ class MainActivityView : AppCompatActivity() {
                     viewModel.getMovies(it)
                 }
         }
+        lifecycleScope.launch {
+            viewModel.movies.collect { movies ->
+                adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
+                binding.moviesRv.scrollToPosition(0)
+            }
+        }
     }
 
     private fun getMovies() {
         lifecycleScope.launch {
-            viewModel.getMovies(viewModel.query.value)
+            viewModel.getMovies()
         }
     }
 
@@ -159,6 +167,9 @@ class MainActivityView : AppCompatActivity() {
 
     private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {
         when (currentState) {
+            NONE -> {
+                loadStatePresentation?.hideState()
+            }
 
             TRANSPARENT_LOADING -> {
                 loadStatePresentation = TransparentLoadingStatePresentation(placeHolder)
@@ -179,7 +190,7 @@ class MainActivityView : AppCompatActivity() {
 
             ERROR -> {
                 loadStatePresentation =
-                    ErrorStatePresentation(placeHolder) { getMovies(EMPTY_STRING) }
+                    ErrorStatePresentation(placeHolder) { getMovies() }
                 loadStatePresentation?.showState()
             }
         }

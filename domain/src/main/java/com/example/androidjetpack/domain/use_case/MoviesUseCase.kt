@@ -48,7 +48,9 @@ class MoviesUseCase @Inject constructor(
         val inputFormatter = DateTimeFormatter.ofPattern(ENGLISH_DATE_PATTERN, Locale.ENGLISH)
         val date = LocalDate.parse(this, inputFormatter)
         val outputFormatter = DateTimeFormatter.ofPattern(RUSSIAN_DATE_PATTERN, Locale(RUSSIAN))
-        return date.format(outputFormatter)
+        return runCatching {
+            date.format(outputFormatter)
+        }.getOrDefault(EMPTY_STRING)
     }
 
     private companion object {

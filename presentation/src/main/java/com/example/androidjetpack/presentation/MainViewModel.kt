@@ -10,11 +10,16 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -29,11 +34,8 @@ class MainViewModel @Inject constructor(
     private val _movies = MutableStateFlow(MovieList())
     val movies = _movies.asStateFlow()
 
-    private val _progressRequest = MutableStateFlow(0)
-    val progressRequest = _progressRequest.asStateFlow()
-
-    private val _snackError = MutableStateFlow(false)
-    val snackError = _snackError.asStateFlow()
+    private val _snackError = MutableSharedFlow<Unit>()
+    val snackError = _snackError.asSharedFlow()
 
     private val _query = MutableStateFlow(EMPTY_STRING)
     val query = _query.asStateFlow()
@@ -41,57 +43,33 @@ class MainViewModel @Inject constructor(
     val hasData: Boolean
         get() = _movies.value.listMovie.isNotEmpty()
 
-    suspend fun getMovies(query: String) {
-        if (hasData) {
-            getMoviesHasData(query)
-        } else {
-            getMoviesHasNotData(query)
-        }
-    }
-
     fun setNewQuery(query: String) {
         _query.value = query
     }
 
-    private suspend fun getMoviesHasNotData(query: String) {
+    suspend fun getMovies(query: String) {
         try {
-            _currentState.value = LOADING
-            _movies.value = moviesUseCase.getMovies(query)
             if (hasData) {
-                _currentState.value = NONE
+                _currentState.value = TRANSPARENT_LOADING
             } else {
-                _currentState.value = NOTHING_FOUND
+                _currentState.value = MAIN_LOADING
+            }
+            _movies.value = moviesUseCase.getMovies(query)
+            if (_currentState.value != ERROR) {
+                _currentState.value = NONE
             }
         } catch (e: Exception) {
-            _currentState.value = ERROR
-        }
-    }
-
-    private suspend fun getMoviesHasData(query: String) {
-        try {
-            startProgress()
-            withContext(Dispatchers.IO) {
-                _movies.value = moviesUseCase.getMovies(query)
+            if (hasData) {
+                showSnackError()
+            } else {
+                _currentState.value = ERROR
             }
-            if (!hasData) {
-                _currentState.value = NOTHING_FOUND
-            }
-        } catch (e: Exception) {
-            showSnackError()
-        } finally {
-            _progressRequest.value = PROGRESS_FINISH
-        }
-    }
-
-    private suspend fun startProgress() {
-        for (progress in 0 until PROGRESS_FINISH step PROGRESS_STEP) {
-            _progressRequest.value = progress
-            delay(100)
         }
     }
 
     private fun showSnackError() {
-        _snackError.value = true
-        _snackError.value = false
+        viewModelScope.launch {
+            _snackError.emit(Unit)
+        }
     }
 }

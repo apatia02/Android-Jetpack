@@ -1,17 +1,17 @@
 package com.example.androidjetpack.presentation.loading_state
 
 import android.view.LayoutInflater
-import com.example.androidjetpack.presentation.databinding.LayoutTransparentLoadingStateBinding
+import com.example.androidjetpack.presentation.databinding.LayoutMainLoadingStateBinding
 
 /**
- * Представление состояния загрузки в виде горизонтального прогрес бара
+ * Представление состояния загрузки в виде обычного прогрес бара
  */
-class TransparentLoadingStatePresentation(
+class MainLoadingStatePresentation(
     private val placeHolder: PlaceHolderViewContainer
 ) : LoadStatePresentation {
 
     private val binding by lazy {
-        LayoutTransparentLoadingStateBinding.inflate(
+        LayoutMainLoadingStateBinding.inflate(
             LayoutInflater.from(placeHolder.context), placeHolder, false
         )
     }

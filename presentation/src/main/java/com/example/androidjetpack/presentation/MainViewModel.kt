@@ -35,18 +35,12 @@ class MainViewModel @Inject constructor(
     private val _movies = MutableStateFlow(PagingData.empty<Movie>())
     val movies = _movies.asStateFlow()
 
-    private val _progressRequest = MutableStateFlow(0)
-    val progressRequest = _progressRequest.asStateFlow()
-
     private val _query = MutableStateFlow(EMPTY_STRING)
     val query = _query.asStateFlow()
 
     private var loadDataJob: Job? = null
 
     private var startProgressJob: Job? = null
-
-    private val _swrIsVisible = MutableStateFlow(false)
-    val swrIsVisible = _swrIsVisible.asStateFlow()
 
     fun setNewQuery(query: String) {
         _query.value = query
@@ -57,10 +51,6 @@ class MainViewModel @Inject constructor(
         loadDataJob = viewModelScope.launch {
             getPagingMovies(query.value)
         }
-    }
-
-    fun setSwrLoadingVisible() {
-        _swrIsVisible.value = true
     }
 
     fun setLoadingState(state: LoadViewState) {

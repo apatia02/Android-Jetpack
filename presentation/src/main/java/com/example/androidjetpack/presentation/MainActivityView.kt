@@ -27,6 +27,13 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.SWR_IS_NOT_VISIBLE
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
+import com.example.androidjetpack.presentation.loading_state.MainLoadingStatePresentation
 import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresentation
 import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
 import com.google.android.material.snackbar.Snackbar
@@ -61,10 +68,9 @@ class MainActivityView : AppCompatActivity() {
 
     private fun init() {
         binding.container.insetKeyBoardMargin()
-        setListeners()
-        setObservers()
         setRecyclerView()
-        clearFilter()
+        setObservers()
+        setListeners()
     }
 
     /**
@@ -80,7 +86,6 @@ class MainActivityView : AppCompatActivity() {
             } else {
                 insetKeyBoard + initialMargin - insetNavBar
             }
-
             (view.layoutParams as? ViewGroup.MarginLayoutParams)?.apply {
                 bottomMargin = margin
                 view.layoutParams = this
@@ -96,7 +101,6 @@ class MainActivityView : AppCompatActivity() {
         }
         clearFilterBtn.setOnClickListener { clearFilter() }
         swipeRefresh.setOnRefreshListener {
-            viewModel.setSwrLoadingVisible()
             viewModel.refreshData()
         }
         movieAdapter.addLoadStateListener { loadState ->
@@ -145,7 +149,12 @@ class MainActivityView : AppCompatActivity() {
         imm.hideSoftInputFromWindow(container.windowToken, 0)
     }
 
-    private fun setObservers() = with(binding) {
+    private fun setObservers() {
+        setMovieObserves()
+        setStateScreenObserves()
+    }
+
+    private fun setStateScreenObserves() {
         lifecycleScope.launch {
             viewModel.currentState.collect { currentState ->
                 updateStatePresentation(currentState)
@@ -159,23 +168,12 @@ class MainActivityView : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            viewModel.progressRequest.collect { progress ->
-                progressBar.progress = progress
-                progressBar.isGone = !hasData || progress == PROGRESS_FINISH
-            }
-        }
-        lifecycleScope.launch {
             viewModel.query
                 .debounce(UiConstants.TIMEOUT_FILTER)
                 .distinctUntilChanged()
                 .collect {
                     viewModel.refreshData()
                 }
-        }
-        lifecycleScope.launch {
-            viewModel.swrIsVisible.collect {
-                swipeRefresh.isRefreshing = it
-            }
         }
     }
 
@@ -186,7 +184,9 @@ class MainActivityView : AppCompatActivity() {
 
     private fun showSnackBarError() {
         val snackBar = Snackbar.make(
-            binding.container, string.error_message_snack, Snackbar.LENGTH_SHORT
+            binding.container,
+            string.error_message_snack,
+            Snackbar.LENGTH_SHORT
         )
         snackBar.show()
     }
@@ -200,23 +200,33 @@ class MainActivityView : AppCompatActivity() {
 
     private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {
         when (currentState) {
-            NONE -> loadStatePresentation?.hideState()
+            NONE -> {
+                loadStatePresentation?.hideState()
+            }
 
-            LOADING -> {
+            SWR_IS_NOT_VISIBLE -> {
+                swipeRefresh.isRefreshing = false
+            }
+
+            TRANSPARENT_LOADING -> {
                 loadStatePresentation = TransparentLoadingStatePresentation(placeHolder)
+                loadStatePresentation?.showState()
+            }
+
+            MAIN_LOADING -> {
+                loadStatePresentation = MainLoadingStatePresentation(placeHolder)
                 loadStatePresentation?.showState()
             }
 
             NOTHING_FOUND -> {
                 loadStatePresentation = NotFoundStatePresentation(
-                    placeHolder, getString(string.nothing_found_message, viewModel.query.value)
+                    placeHolder, getString(string.nothing_found_message, filterEt.text)
                 )
                 loadStatePresentation?.showState()
             }
 
-            ERROR -> {
-                loadStatePresentation =
-                    ErrorStatePresentation(placeHolder) { viewModel.refreshData() }
+            LoadViewState.ERROR -> {
+                loadStatePresentation = ErrorStatePresentation(placeHolder) { getMovies() }
                 loadStatePresentation?.showState()
             }
         }

@@ -1,7 +1,7 @@
 package com.example.androidjetpack.presentation.loading_state
 
 import android.view.LayoutInflater
-import com.example.androidjetpack.presentation.databinding.NothingFoundStateBinding
+import com.example.androidjetpack.presentation.databinding.LayoutNothingFoundStateBinding
 
 /**
  * Представление состояния не найдено
@@ -12,7 +12,7 @@ class NotFoundStatePresentation(
 ) : LoadStatePresentation {
 
     private val binding by lazy {
-        NothingFoundStateBinding.inflate(
+        LayoutNothingFoundStateBinding.inflate(
             LayoutInflater.from(placeHolder.context), placeHolder, false
         )
     }

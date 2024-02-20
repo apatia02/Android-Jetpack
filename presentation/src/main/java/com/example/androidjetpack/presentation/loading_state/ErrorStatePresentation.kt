@@ -1,7 +1,7 @@
 package com.example.androidjetpack.presentation.loading_state
 
 import android.view.LayoutInflater
-import com.example.androidjetpack.presentation.databinding.ErrorStateBinding
+import com.example.androidjetpack.presentation.databinding.LayoutErrorStateBinding
 
 /**
  * Представление состояния ошибки
@@ -12,7 +12,7 @@ class ErrorStatePresentation(
 ) : LoadStatePresentation {
 
     private val binding by lazy {
-        ErrorStateBinding.inflate(
+        LayoutErrorStateBinding.inflate(
             LayoutInflater.from(placeHolder.context), placeHolder, false
         )
     }

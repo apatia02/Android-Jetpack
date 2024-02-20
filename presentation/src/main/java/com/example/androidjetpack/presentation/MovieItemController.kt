@@ -4,7 +4,7 @@ import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import com.example.androidjetpack.base_resources.R.drawable
 import com.example.androidjetpack.domain.entity.Movie
-import com.example.androidjetpack.presentation.databinding.ItemFilmBinding
+import com.example.androidjetpack.presentation.databinding.LayoutItemFilmBinding
 import ru.surfstudio.android.easyadapter.controller.BindableItemController
 import ru.surfstudio.android.easyadapter.holder.BindableViewHolder
 
@@ -20,9 +20,9 @@ class MovieItemController(
 
     inner class Holder(
         parent: ViewGroup
-    ) : BindableViewHolder<Movie>(parent, R.layout.item_film) {
+    ) : BindableViewHolder<Movie>(parent, R.layout.layout_item_film) {
 
-        private val binding = ItemFilmBinding.bind(itemView)
+        private val binding = LayoutItemFilmBinding.bind(itemView)
 
         private var heartRes = drawable.heart_outlined
 

@@ -33,7 +33,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="10dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_edit_text"
                 android:hint="@string/hint_filter"
                 android:paddingHorizontal="50dp"
@@ -44,24 +43,15 @@
                 android:id="@+id/clear_filter_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
+                android:layout_gravity="end|center_vertical"
                 android:contentDescription="@null"
                 android:foreground="?android:selectableItemBackgroundBorderless"
-                android:paddingVertical="18dp"
                 android:paddingStart="0dp"
+                android:paddingTop="18dp"
                 android:paddingEnd="26dp"
                 android:visibility="gone"
+                android:paddingBottom="10dp"
                 android:src="@drawable/close_icon" />
-
-            <ProgressBar
-                android:id="@+id/progressBar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_gravity="bottom"
-                android:progressBackgroundTint="@color/purple_200"
-                android:progressTint="@color/purple_500"
-                android:visibility="gone" />
         </FrameLayout>
     </com.google.android.material.appbar.AppBarLayout>
 

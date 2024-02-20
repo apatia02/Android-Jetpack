@@ -15,11 +15,17 @@ import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
-import com.example.androidjetpack.presentation.UiConstants.PROGRESS_FINISH
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
 import com.example.androidjetpack.presentation.loading_state.ErrorStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadViewState
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.SWR_IS_NOT_VISIBLE
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
+import com.example.androidjetpack.presentation.loading_state.MainLoadingStatePresentation
 import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresentation
 import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
 import com.google.android.material.snackbar.Snackbar
@@ -54,10 +60,9 @@ class MainActivityView : AppCompatActivity() {
 
     private fun init() {
         binding.container.insetKeyBoardMargin()
-        setObservers()
         setRecyclerView()
+        setObservers()
         setListeners()
-        clearFilter()
     }
 
     /**
@@ -73,7 +78,6 @@ class MainActivityView : AppCompatActivity() {
             } else {
                 insetKeyBoard + initialMargin - insetNavBar
             }
-
             (view.layoutParams as? ViewGroup.MarginLayoutParams)?.apply {
                 bottomMargin = margin
                 view.layoutParams = this
@@ -103,46 +107,44 @@ class MainActivityView : AppCompatActivity() {
         imm.hideSoftInputFromWindow(container.windowToken, 0)
     }
 
-    private fun setObservers() = with(binding) {
+    private fun setObservers() {
+        setMovieObserves()
+        setStateScreenObserves()
+    }
+
+    private fun setStateScreenObserves() {
         lifecycleScope.launch {
             viewModel.currentState.collect { currentState ->
                 updateStatePresentation(currentState)
             }
         }
         lifecycleScope.launch {
+            viewModel.snackError.collect {
+                showSnackBarError()
+            }
+        }
+    }
+
+    private fun setMovieObserves() {
+        lifecycleScope.launch {
+            viewModel.query
+                .debounce(UiConstants.TIMEOUT_FILTER)
+                .distinctUntilChanged()
+                .collect {
+                    viewModel.getMovies()
+                }
+        }
+        lifecycleScope.launch {
             viewModel.movies.collect { movies ->
                 adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
-            }
-        }
-        lifecycleScope.launch {
-            viewModel.progressRequest.collect { progress ->
-                progressBar.progress = progress
-                progressBar.isGone = !viewModel.hasData || progress == PROGRESS_FINISH
-                if (progress == PROGRESS_FINISH) moviesRv.scrollToPosition(0)
-            }
-        }
-        lifecycleScope.launch {
-            viewModel.snackError.collect {
-                if (it) {
-                    showSnackBarError()
-                }
-            }
-        }
-        lifecycleScope.launch {
-            viewModel.query.debounce(UiConstants.TIMEOUT_FILTER).distinctUntilChanged().collect {
-                    viewModel.getMovies(it)
-                }
-        }
-        lifecycleScope.launch {
-            viewModel.swrIsVisible.collect {
-                swipeRefresh.isRefreshing = it
+                binding.moviesRv.scrollToPosition(0)
             }
         }
     }
 
     private fun getMovies(isSwr: Boolean = false) {
         lifecycleScope.launch {
-            viewModel.getMovies(viewModel.query.value, isSwr)
+            viewModel.getMovies(isSwr = isSwr)
         }
     }
 
@@ -152,7 +154,9 @@ class MainActivityView : AppCompatActivity() {
 
     private fun showSnackBarError() {
         val snackBar = Snackbar.make(
-            binding.container, string.error_message_snack, Snackbar.LENGTH_SHORT
+            binding.container,
+            string.error_message_snack,
+            Snackbar.LENGTH_SHORT
         )
         snackBar.show()
     }
@@ -166,22 +170,34 @@ class MainActivityView : AppCompatActivity() {
 
     private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {
         when (currentState) {
-            LoadViewState.NONE -> loadStatePresentation?.hideState()
+            NONE -> {
+                loadStatePresentation?.hideState()
+            }
 
-            LoadViewState.LOADING -> {
+            SWR_IS_NOT_VISIBLE -> {
+                swipeRefresh.isRefreshing = false
+            }
+
+            TRANSPARENT_LOADING -> {
                 loadStatePresentation = TransparentLoadingStatePresentation(placeHolder)
                 loadStatePresentation?.showState()
             }
 
-            LoadViewState.NOTHING_FOUND -> {
+            MAIN_LOADING -> {
+                loadStatePresentation = MainLoadingStatePresentation(placeHolder)
+                loadStatePresentation?.showState()
+            }
+
+            NOTHING_FOUND -> {
                 loadStatePresentation = NotFoundStatePresentation(
-                    placeHolder, getString(string.nothing_found_message, viewModel.query.value)
+                    placeHolder, getString(string.nothing_found_message, filterEt.text)
                 )
                 loadStatePresentation?.showState()
             }
 
-            LoadViewState.ERROR -> {
-                loadStatePresentation = ErrorStatePresentation(placeHolder) { getMovies() }
+            ERROR -> {
+                loadStatePresentation =
+                    ErrorStatePresentation(placeHolder) { getMovies() }
                 loadStatePresentation?.showState()
             }
         }

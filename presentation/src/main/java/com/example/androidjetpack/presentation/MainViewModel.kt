@@ -9,6 +9,7 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.SWR_IS_NOT_VISIBLE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -42,14 +43,14 @@ class MainViewModel @Inject constructor(
         _query.value = query
     }
 
-    suspend fun getMovies(query: String = _query.value) {
+    suspend fun getMovies(isSwr: Boolean = false) {
         try {
-            if (hasData) {
-                _currentState.value = TRANSPARENT_LOADING
-            } else {
-                _currentState.value = MAIN_LOADING
+            when {
+                isSwr -> _currentState.value = NONE
+                hasData -> _currentState.value = TRANSPARENT_LOADING
+                else -> _currentState.value = MAIN_LOADING
             }
-            _movies.value = moviesUseCase.getMovies(query)
+            _movies.value = moviesUseCase.getMovies(query.value)
             if (hasData) {
                 _currentState.value = NONE
             } else {
@@ -58,8 +59,13 @@ class MainViewModel @Inject constructor(
         } catch (e: Exception) {
             if (hasData) {
                 showSnackError()
+                _currentState.value = NONE
             } else {
                 _currentState.value = ERROR
+            }
+        } finally {
+            if (isSwr) {
+                _currentState.value = SWR_IS_NOT_VISIBLE
             }
         }
     }

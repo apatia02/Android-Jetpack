@@ -1,6 +1,5 @@
 package com.example.androidjetpack.presentation
 
-import com.example.androidjetpack.presentation.adapter.MovieAdapter
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
@@ -17,16 +16,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
-import com.example.androidjetpack.presentation.UiConstants.PROGRESS_FINISH
+import com.example.androidjetpack.presentation.adapter.MovieAdapter
 import com.example.androidjetpack.presentation.adapter.MovieLoadStateAdapter
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
 import com.example.androidjetpack.presentation.loading_state.ErrorStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadViewState
-import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
-import com.example.androidjetpack.presentation.loading_state.LoadViewState.LOADING
-import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
-import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
@@ -106,12 +101,19 @@ class MainActivityView : AppCompatActivity() {
         movieAdapter.addLoadStateListener { loadState ->
             when (loadState.refresh) {
                 is LoadState.Loading -> {
-                    if (hasData) {
-                        viewModel.startLoadingHasData()
-                    } else {
-                        viewModel.setLoadingState(LOADING)
+                    when {
+                        swipeRefresh.isRefreshing -> {
+                            viewModel.setLoadingState(NONE)
+                        }
+
+                        hasData -> {
+                            viewModel.setLoadingState(TRANSPARENT_LOADING)
+                        }
+
+                        else -> {
+                            viewModel.setLoadingState(MAIN_LOADING)
+                        }
                     }
-                    moviesRv.scrollToPosition(0)
                 }
 
                 is LoadState.Error -> {
@@ -120,17 +122,21 @@ class MainActivityView : AppCompatActivity() {
                     } else {
                         viewModel.setLoadingState(ERROR)
                     }
-                    viewModel.finishLoading()
+                    if (swipeRefresh.isRefreshing) {
+                        viewModel.setLoadingState(SWR_IS_NOT_VISIBLE)
+                    }
                 }
 
                 is LoadState.NotLoading -> {
-                    if (viewModel.currentState.value == LOADING || viewModel.progressRequest.value > 0) {
+                    if (swipeRefresh.isRefreshing) {
+                        viewModel.setLoadingState(SWR_IS_NOT_VISIBLE)
+                    }
+                    if (viewModel.currentState.value != NONE) {
                         if (hasData) {
                             viewModel.setLoadingState(NONE)
                         } else {
                             viewModel.setLoadingState(NOTHING_FOUND)
                         }
-                        viewModel.finishLoading()
                     }
                 }
             }
@@ -150,11 +156,6 @@ class MainActivityView : AppCompatActivity() {
     }
 
     private fun setObservers() {
-        setMovieObserves()
-        setStateScreenObserves()
-    }
-
-    private fun setStateScreenObserves() {
         lifecycleScope.launch {
             viewModel.currentState.collect { currentState ->
                 updateStatePresentation(currentState)
@@ -173,6 +174,7 @@ class MainActivityView : AppCompatActivity() {
                 .distinctUntilChanged()
                 .collect {
                     viewModel.refreshData()
+                    binding.moviesRv.scrollToPosition(0)
                 }
         }
     }
@@ -225,8 +227,9 @@ class MainActivityView : AppCompatActivity() {
                 loadStatePresentation?.showState()
             }
 
-            LoadViewState.ERROR -> {
-                loadStatePresentation = ErrorStatePresentation(placeHolder) { getMovies() }
+            ERROR -> {
+                loadStatePresentation =
+                    ErrorStatePresentation(placeHolder) { viewModel.refreshData() }
                 loadStatePresentation?.showState()
             }
         }

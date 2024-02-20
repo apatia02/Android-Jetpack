@@ -6,7 +6,7 @@ import androidx.core.view.isGone
 import androidx.paging.LoadState
 import androidx.paging.LoadStateAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.androidjetpack.presentation.databinding.FooterPaginationBinding
+import com.example.androidjetpack.presentation.databinding.LayoutFooterPaginationBinding
 
 class MovieLoadStateAdapter(private val retry: () -> Unit) :
     LoadStateAdapter<MovieLoadStateAdapter.FooterViewHolder>() {
@@ -23,14 +23,14 @@ class MovieLoadStateAdapter(private val retry: () -> Unit) :
     }
 
     class FooterViewHolder private constructor(
-        private val binding: FooterPaginationBinding,
+        private val binding: LayoutFooterPaginationBinding,
         private val retryClick: () -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         companion object {
             fun create(parent: ViewGroup, retryClick: () -> Unit): FooterViewHolder {
                 val inflater = LayoutInflater.from(parent.context)
-                val binding = FooterPaginationBinding.inflate(inflater, parent, false)
+                val binding = LayoutFooterPaginationBinding.inflate(inflater, parent, false)
                 return FooterViewHolder(binding, retryClick)
             }
         }

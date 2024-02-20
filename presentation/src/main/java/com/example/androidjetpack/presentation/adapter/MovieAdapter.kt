@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.androidjetpack.base_resources.R.drawable
 import com.example.androidjetpack.domain.entity.Movie
-import com.example.androidjetpack.presentation.databinding.ItemFilmBinding
+import com.example.androidjetpack.presentation.databinding.LayoutItemFilmBinding
 
 class MovieAdapter(
     private val onClickListener: (String) -> Unit, private val changeFavouriteStatus: (Int) -> Unit
@@ -36,13 +36,13 @@ class MovieAdapter(
     }
 
     class MovieViewHolder private constructor(
-        private val binding: ItemFilmBinding
+        private val binding: LayoutItemFilmBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         companion object {
             fun create(parent: ViewGroup): MovieViewHolder {
                 val inflater = LayoutInflater.from(parent.context)
-                val binding = ItemFilmBinding.inflate(inflater, parent, false)
+                val binding = LayoutItemFilmBinding.inflate(inflater, parent, false)
                 return MovieViewHolder(binding)
             }
         }
@@ -63,14 +63,16 @@ class MovieAdapter(
                 clickOnHeart(movie.id, changeFavouriteStatus)
             }
         }
-        private fun clickOnHeart(movieId: Int, changeFavouriteStatus: (Int) -> Unit) = with(binding) {
-            changeFavouriteStatus(movieId)
-            heartRes = if (heartRes == drawable.heart_filled) {
-                drawable.heart_outlined
-            } else {
-                drawable.heart_filled
+
+        private fun clickOnHeart(movieId: Int, changeFavouriteStatus: (Int) -> Unit) =
+            with(binding) {
+                changeFavouriteStatus(movieId)
+                heartRes = if (heartRes == drawable.heart_filled) {
+                    drawable.heart_outlined
+                } else {
+                    drawable.heart_filled
+                }
+                heartIv.setImageResource(heartRes)
             }
-            heartIv.setImageResource(heartRes)
-        }
     }
 }

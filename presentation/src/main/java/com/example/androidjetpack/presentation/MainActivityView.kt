@@ -98,6 +98,10 @@ class MainActivityView : AppCompatActivity() {
         swipeRefresh.setOnRefreshListener {
             viewModel.refreshData()
         }
+        addAdapterListener()
+    }
+
+    private fun addAdapterListener() = with(binding) {
         movieAdapter.addLoadStateListener { loadState ->
             when (loadState.refresh) {
                 is LoadState.Loading -> {

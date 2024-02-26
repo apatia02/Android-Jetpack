@@ -1,6 +1,7 @@
 package com.example.androidjetpack.presentation
 
 import android.app.Activity
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -14,8 +15,11 @@ import androidx.core.view.marginBottom
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
+import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
 import com.example.androidjetpack.presentation.adapter.MovieAdapter
 import com.example.androidjetpack.presentation.adapter.MovieLoadStateAdapter
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
@@ -37,9 +41,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivityView : AppCompatActivity() {
+
+    @Inject
+    lateinit var getFavouriteStatusUseCase: GetFavouriteStatusUseCase
 
     private lateinit var binding: ActivityMainViewBinding
 
@@ -47,9 +55,7 @@ class MainActivityView : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
-    private val movieAdapter =
-        MovieAdapter(onClickListener = { showSnackBarMovie(title = it) },
-            changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) })
+    private lateinit var movieAdapter: MovieAdapter
 
     private val hasData: Boolean
         get() = movieAdapter.itemCount > 0
@@ -61,11 +67,34 @@ class MainActivityView : AppCompatActivity() {
         init()
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) = with(binding) {
+        super.onConfigurationChanged(newConfig)
+        saveScrollPosition()
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            moviesRv.layoutManager = GridLayoutManager(this@MainActivityView, 2)
+        } else {
+            moviesRv.layoutManager = LinearLayoutManager(this@MainActivityView)
+        }
+        moviesRv.scrollToPosition(viewModel.scrollPosition)
+    }
+
     private fun init() {
         binding.container.insetKeyBoardMargin()
         setRecyclerView()
         setObservers()
         setListeners()
+    }
+
+    private fun saveScrollPosition() {
+        val layoutManager = binding.moviesRv.layoutManager
+        viewModel.scrollPosition = when (layoutManager) {
+            is GridLayoutManager -> {
+                layoutManager.findFirstVisibleItemPosition()
+            }
+
+            is LinearLayoutManager -> layoutManager.findFirstVisibleItemPosition()
+            else -> 0
+        }
     }
 
     /**
@@ -184,6 +213,11 @@ class MainActivityView : AppCompatActivity() {
     }
 
     private fun setRecyclerView() {
+        movieAdapter = MovieAdapter(
+            onClickListener = { showSnackBarMovie(title = it) },
+            changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) },
+            getFavouriteStatusUseCase = getFavouriteStatusUseCase
+        )
         binding.moviesRv.adapter =
             movieAdapter.withLoadStateFooter(footer = MovieLoadStateAdapter { movieAdapter.retry() })
     }

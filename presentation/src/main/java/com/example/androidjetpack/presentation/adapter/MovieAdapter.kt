@@ -8,10 +8,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.androidjetpack.base_resources.R.drawable
 import com.example.androidjetpack.domain.entity.Movie
+import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
 import com.example.androidjetpack.presentation.databinding.LayoutItemFilmBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MovieAdapter(
-    private val onClickListener: (String) -> Unit, private val changeFavouriteStatus: (Int) -> Unit
+    private val getFavouriteStatusUseCase: GetFavouriteStatusUseCase,
+    private val onClickListener: (String) -> Unit, private val changeFavouriteStatus: (Int) -> Unit,
 ) : PagingDataAdapter<Movie, MovieAdapter.MovieViewHolder>(MovieDiffCallback) {
 
     companion object {
@@ -31,7 +36,12 @@ class MovieAdapter(
     override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
         val movie = getItem(position)
         if (movie != null) {
-            holder.bind(movie, onClickListener, changeFavouriteStatus)
+            holder.bind(
+                movie = movie,
+                getFavouriteStatusUseCase = getFavouriteStatusUseCase,
+                onClickListener = onClickListener,
+                changeFavouriteStatus = changeFavouriteStatus,
+            )
         }
     }
 
@@ -48,13 +58,21 @@ class MovieAdapter(
         }
 
         private var heartRes = drawable.heart_outlined
+
         fun bind(
-            movie: Movie, onClickListener: (String) -> Unit, changeFavouriteStatus: (Int) -> Unit
+            movie: Movie,
+            getFavouriteStatusUseCase: GetFavouriteStatusUseCase,
+            onClickListener: (String) -> Unit,
+            changeFavouriteStatus: (Int) -> Unit,
         ) = with(binding) {
             titleTv.text = movie.title
             descriptionTv.text = movie.description
-            heartRes = if (movie.isFavourite) drawable.heart_filled else drawable.heart_outlined
-            heartIv.setImageResource(heartRes)
+            CoroutineScope(Dispatchers.Default).launch {
+                heartRes =
+                    if (getFavouriteStatusUseCase.getFavouriteStatus(movie.id)) drawable.heart_filled
+                    else drawable.heart_outlined
+                heartIv.setImageResource(heartRes)
+            }
             Glide.with(itemView).load(movie.posterPath).placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate

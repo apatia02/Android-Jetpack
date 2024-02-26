@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
@@ -37,6 +38,8 @@ class MainViewModel @Inject constructor(
 
     private var loadDataJob: Job? = null
 
+    var scrollPosition = 0
+
     fun setNewQuery(query: String) {
         _query.value = query
     }
@@ -55,7 +58,7 @@ class MainViewModel @Inject constructor(
     private suspend fun getPagingMovies(query: String) {
         val pager = Pager(config = PagingConfig(pageSize = PAGE_SIZE)) {
             MoviePagingSource(moviesUseCase, query)
-        }.flow
+        }.flow.cachedIn(viewModelScope)
         _movies.value = pager.first()
     }
 

@@ -22,7 +22,6 @@ import com.example.androidjetpack.domain.EMPTY_STRING
  * @property voteCount Количество голосов, полученных фильмом.
  */
 data class Movie(
-    val isFavourite: Boolean = false,
     val adult: Boolean = false,
     val backdropPath: String = EMPTY_STRING,
     val genreIds: List<Int> = emptyList(),

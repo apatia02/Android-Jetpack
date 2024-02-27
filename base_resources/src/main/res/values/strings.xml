@@ -5,4 +5,7 @@
     <string name="error_message">Нам не удалось обработать \n ваш запрос. Пробуйте еще раз.</string>
     <string name="error_invalid_type">Invalid view type</string>
     <string name="error_message_snack">Проверьте соединение с интернетом и попробуйте еще раз</string>
+    <string name="title_theme_dialog">Выберите тему</string>
+    <string name="light_theme">Светлая</string>
+    <string name="dark_theme">Темная</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.example.androidjetpack.presentation
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
@@ -8,6 +9,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
@@ -20,6 +22,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
+import com.example.androidjetpack.domain.use_case.GetThemeUseCase
+import com.example.androidjetpack.domain.use_case.SetThemeUseCase
 import com.example.androidjetpack.presentation.adapter.MovieAdapter
 import com.example.androidjetpack.presentation.adapter.MovieLoadStateAdapter
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
@@ -48,6 +52,12 @@ class MainActivityView : AppCompatActivity() {
 
     @Inject
     lateinit var getFavouriteStatusUseCase: GetFavouriteStatusUseCase
+
+    @Inject
+    lateinit var getThemeUseCase: GetThemeUseCase
+
+    @Inject
+    lateinit var setThemeUseCase: SetThemeUseCase
 
     private lateinit var binding: ActivityMainViewBinding
 
@@ -83,6 +93,7 @@ class MainActivityView : AppCompatActivity() {
         setRecyclerView()
         setObservers()
         setListeners()
+        AppCompatDelegate.setDefaultNightMode(getThemeUseCase.getTheme())
     }
 
     private fun saveScrollPosition() {
@@ -128,6 +139,7 @@ class MainActivityView : AppCompatActivity() {
             viewModel.refreshData()
         }
         addAdapterListener()
+        settingsIv.setOnClickListener { showThemeSelectionDialog() }
     }
 
     private fun addAdapterListener() = with(binding) {
@@ -236,6 +248,26 @@ class MainActivityView : AppCompatActivity() {
             binding.container, title, Snackbar.LENGTH_SHORT
         )
         snackBar.show()
+    }
+
+    private fun showThemeSelectionDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(getString(string.title_theme_dialog))
+        val themes = arrayOf(getString(string.light_theme), getString(string.dark_theme))
+        builder.setItems(themes) { _, which ->
+            when (which) {
+                0 -> setAppTheme(AppCompatDelegate.MODE_NIGHT_NO)
+                1 -> setAppTheme(AppCompatDelegate.MODE_NIGHT_YES)
+            }
+        }
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+    private fun setAppTheme(mode: Int) {
+        AppCompatDelegate.setDefaultNightMode(mode)
+        setThemeUseCase.setTheme(mode)
+        recreate()
     }
 
     private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {

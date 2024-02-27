@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AndroidJetpack</string>
+    <string name="hint_filter">Поиск по названию фильма</string>
 </resources>

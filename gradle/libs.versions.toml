@@ -23,10 +23,12 @@ junit = "4.13.2"
 junitExt = "1.1.5"
 espresso = "3.5.1"
 easyadapter = "7.1.0-228"
+swipeRefresh = "1.1.0"
 
 
 [libraries]
 androidxKtx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+swipeRefresh = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swipeRefresh" }
 easyadapter = { group = "ru.surfstudio.android", name = "easyadapter", version.ref = "easyadapter" }
 kotlinStdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 glideLib = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }

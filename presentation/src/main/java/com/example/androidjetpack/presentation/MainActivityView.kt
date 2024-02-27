@@ -8,13 +8,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.marginBottom
+import androidx.lifecycle.lifecycleScope
+import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
+import com.example.androidjetpack.presentation.loading_state.ErrorStatePresentation
+import com.example.androidjetpack.presentation.loading_state.LoadStatePresentation
+import com.example.androidjetpack.presentation.loading_state.LoadViewState
+import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresentation
+import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivityView : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainViewBinding
+
+    private var loadStatePresentation: LoadStatePresentation? = null
 
     private val viewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,6 +32,7 @@ class MainActivityView : AppCompatActivity() {
         binding = ActivityMainViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.container.insetKeyBoardMargin()
+        setObservers()
     }
 
     /**
@@ -43,6 +54,42 @@ class MainActivityView : AppCompatActivity() {
                 view.layoutParams = this
             }
             insets
+        }
+    }
+
+    private fun setObservers() {
+        lifecycleScope.launch {
+            viewModel.currentState.collect { currentState ->
+                updateStatePresentation(currentState)
+            }
+        }
+    }
+
+    private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {
+        when (currentState) {
+            LoadViewState.NONE -> {
+                loadStatePresentation?.hideState()
+            }
+
+            LoadViewState.LOADING -> {
+                loadStatePresentation = TransparentLoadingStatePresentation(placeHolder)
+                loadStatePresentation?.showState()
+            }
+
+            LoadViewState.NOTHING_FOUND -> {
+                loadStatePresentation = NotFoundStatePresentation(
+                    placeHolder,
+                    getString(string.nothing_found_message, filterEt.text)
+                )
+                loadStatePresentation?.showState()
+            }
+
+            LoadViewState.ERROR -> {
+                loadStatePresentation = ErrorStatePresentation(placeHolder) {
+                    //todo добавить повторную загрузку данных
+                }
+                loadStatePresentation?.showState()
+            }
         }
     }
 }

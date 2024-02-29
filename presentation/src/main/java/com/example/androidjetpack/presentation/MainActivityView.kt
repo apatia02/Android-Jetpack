@@ -45,7 +45,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivityView : AppCompatActivity() {
@@ -228,7 +227,7 @@ class MainActivityView : AppCompatActivity() {
         movieAdapter = MovieAdapter(
             onClickListener = { showSnackBarMovie(title = it) },
             changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) },
-            getFavouriteStatusUseCase = getFavouriteStatusUseCase
+            getFavouriteStatus = { viewModel.getFavouriteStatus(movieId = it) }
         )
         binding.moviesRv.adapter =
             movieAdapter.withLoadStateFooter(footer = MovieLoadStateAdapter { movieAdapter.retry() })

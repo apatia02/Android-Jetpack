@@ -8,14 +8,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.androidjetpack.base_resources.R.drawable
 import com.example.androidjetpack.domain.entity.Movie
-import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
 import com.example.androidjetpack.presentation.databinding.LayoutItemFilmBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MovieAdapter(
-    private val getFavouriteStatusUseCase: GetFavouriteStatusUseCase,
+    private val getFavouriteStatus: (Int) -> Boolean,
     private val onClickListener: (String) -> Unit, private val changeFavouriteStatus: (Int) -> Unit,
 ) : PagingDataAdapter<Movie, MovieAdapter.MovieViewHolder>(MovieDiffCallback) {
 
@@ -38,7 +34,7 @@ class MovieAdapter(
         if (movie != null) {
             holder.bind(
                 movie = movie,
-                getFavouriteStatusUseCase = getFavouriteStatusUseCase,
+                getFavouriteStatus = getFavouriteStatus,
                 onClickListener = onClickListener,
                 changeFavouriteStatus = changeFavouriteStatus,
             )
@@ -61,28 +57,28 @@ class MovieAdapter(
 
         fun bind(
             movie: Movie,
-            getFavouriteStatusUseCase: GetFavouriteStatusUseCase,
+            getFavouriteStatus: (Int) -> Boolean,
             onClickListener: (String) -> Unit,
             changeFavouriteStatus: (Int) -> Unit,
         ) = with(binding) {
             titleTv.text = movie.title
             descriptionTv.text = movie.description
-            CoroutineScope(Dispatchers.Default).launch {
-                heartRes =
-                    if (getFavouriteStatusUseCase.getFavouriteStatus(movie.id)) drawable.heart_filled
-                    else drawable.heart_outlined
-                heartIv.setImageResource(heartRes)
+            heartRes = if (getFavouriteStatus(movie.id)) {
+                drawable.heart_filled
+            } else {
+                drawable.heart_outlined
             }
+            heartIv.setImageResource(heartRes)
             Glide.with(itemView).load(movie.posterPath).placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate
             container.setOnClickListener { onClickListener(movie.title) }
             heartIv.setOnClickListener {
-                clickOnHeart(movie.id, changeFavouriteStatus)
+                onHeartClicked(movie.id, changeFavouriteStatus)
             }
         }
 
-        private fun clickOnHeart(movieId: Int, changeFavouriteStatus: (Int) -> Unit) =
+        private fun onHeartClicked(movieId: Int, changeFavouriteStatus: (Int) -> Unit) =
             with(binding) {
                 changeFavouriteStatus(movieId)
                 heartRes = if (heartRes == drawable.heart_filled) {

@@ -9,6 +9,7 @@ import androidx.paging.cachedIn
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
+import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
 import com.example.androidjetpack.domain.use_case.MoviesUseCase
 import com.example.androidjetpack.presentation.UiConstants.PAGE_SIZE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState
@@ -19,12 +20,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val moviesUseCase: MoviesUseCase,
-    private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase
+    private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase,
+    private val getFavouriteStatusUseCase: GetFavouriteStatusUseCase
 ) : ViewModel() {
 
     private val _currentState = MutableStateFlow(NONE)
@@ -60,6 +63,10 @@ class MainViewModel @Inject constructor(
             MoviePagingSource(moviesUseCase, query)
         }.flow.cachedIn(viewModelScope)
         _movies.value = pager.first()
+    }
+
+    fun getFavouriteStatus(movieId: Int): Boolean = runBlocking {
+        getFavouriteStatusUseCase.getFavouriteStatus(movieId)
     }
 
     fun changeFavouriteStatus(movieId: Int) {

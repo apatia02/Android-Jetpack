@@ -38,11 +38,11 @@ class MovieItemController(
             dateTv.text = movie.releaseDate
             container.setOnClickListener { onClickListener(movie.title) }
             heartIv.setOnClickListener {
-                clickOnHeart(movie.id)
+                onHeartClicked(movie.id)
             }
         }
 
-        private fun clickOnHeart(movieId: Int) = with(binding) {
+        private fun onHeartClicked(movieId: Int) = with(binding) {
             changeFavouriteStatus(movieId)
             heartRes = if (heartRes == drawable.heart_filled) {
                 drawable.heart_outlined

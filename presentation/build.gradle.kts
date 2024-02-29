@@ -4,11 +4,13 @@ plugins {
     di_module
     common_module
 }
+
 android {
     buildFeatures {
         viewBinding = true
     }
 }
+
 dependencies {
     implementation(project(":domain"))
     implementation(project(":base_resources"))
@@ -20,4 +22,5 @@ dependencies {
     implementation(libs.fragment)
     implementation (libs.easyadapter)
     implementation(libs.swipeRefresh)
+    implementation (libs.flexbox)
 }

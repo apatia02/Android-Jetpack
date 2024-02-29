@@ -1,4 +1,4 @@
-package com.example.androidjetpack.presentation
+package com.example.androidjetpack.presentation.view_models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +9,10 @@ import androidx.paging.cachedIn
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
+import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
 import com.example.androidjetpack.domain.use_case.MoviesUseCase
+import com.example.androidjetpack.domain.use_case.SetThemeUseCase
+import com.example.androidjetpack.presentation.MoviePagingSource
 import com.example.androidjetpack.presentation.UiConstants.PAGE_SIZE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
@@ -24,7 +27,9 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val moviesUseCase: MoviesUseCase,
-    private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase
+    private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase,
+    val getFavouriteStatusUseCase: GetFavouriteStatusUseCase,
+    private val setThemeUseCase: SetThemeUseCase
 ) : ViewModel() {
 
     private val _currentState = MutableStateFlow(NONE)
@@ -53,6 +58,10 @@ class MainViewModel @Inject constructor(
 
     fun setLoadingState(state: LoadViewState) {
         _currentState.value = state
+    }
+
+    fun setTheme(mode: Int) {
+        setThemeUseCase.setTheme(mode)
     }
 
     private suspend fun getPagingMovies(query: String) {

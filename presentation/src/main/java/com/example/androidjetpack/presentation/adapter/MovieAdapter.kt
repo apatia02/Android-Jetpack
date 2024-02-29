@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class MovieAdapter(
     private val getFavouriteStatusUseCase: GetFavouriteStatusUseCase,
-    private val onClickListener: (String) -> Unit, private val changeFavouriteStatus: (Int) -> Unit,
+    private val onClickListener: (Movie) -> Unit, private val changeFavouriteStatus: (Int) -> Unit,
 ) : PagingDataAdapter<Movie, MovieAdapter.MovieViewHolder>(MovieDiffCallback) {
 
     companion object {
@@ -62,7 +62,7 @@ class MovieAdapter(
         fun bind(
             movie: Movie,
             getFavouriteStatusUseCase: GetFavouriteStatusUseCase,
-            onClickListener: (String) -> Unit,
+            onClickListener: (Movie) -> Unit,
             changeFavouriteStatus: (Int) -> Unit,
         ) = with(binding) {
             titleTv.text = movie.title
@@ -73,10 +73,12 @@ class MovieAdapter(
                     else drawable.heart_outlined
                 heartIv.setImageResource(heartRes)
             }
-            Glide.with(itemView).load(movie.posterPath).placeholder(drawable.placeholder)
+            Glide.with(itemView)
+                .load(movie.posterPath)
+                .placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate
-            container.setOnClickListener { onClickListener(movie.title) }
+            container.setOnClickListener { onClickListener(movie) }
             heartIv.setOnClickListener {
                 clickOnHeart(movie.id, changeFavouriteStatus)
             }

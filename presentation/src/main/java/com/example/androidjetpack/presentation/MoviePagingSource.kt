@@ -14,7 +14,7 @@ class MoviePagingSource @Inject constructor(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Movie> {
         return try {
             val nextPage = params.key ?: 1
-            val movies = moviesUseCase.getMovies(query, nextPage)
+            val movies = moviesUseCase.invoke(query, nextPage)
             LoadResult.Page(
                 data = movies.listMovie,
                 prevKey = if (nextPage == 1) null else nextPage - 1,

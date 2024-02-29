@@ -18,7 +18,7 @@ class MoviesUseCase @Inject constructor(
     /**
      * Запрос на получение фильмов по фильтру, если фильтр пустой возвращает все фильмы
      */
-    suspend fun getMovies(query: String, page: Int): MovieList {
+    suspend operator fun invoke(query: String, page: Int): MovieList {
         val listMovie = if (query == EMPTY_STRING) {
             moviesRepository.getMovies(page)
         } else {

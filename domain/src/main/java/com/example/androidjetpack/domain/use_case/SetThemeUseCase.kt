@@ -5,5 +5,5 @@ import javax.inject.Inject
 
 class SetThemeUseCase @Inject constructor(private val settingsRepository: SettingsRepository) {
 
-    fun setTheme(mode: Int): Unit = settingsRepository.setThemeMode(mode)
+    operator fun invoke(mode: Int): Unit = settingsRepository.setThemeMode(mode)
 }

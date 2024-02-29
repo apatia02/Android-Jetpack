@@ -13,7 +13,7 @@ class GetFavouriteStatusUseCase @Inject constructor(
     /**
      * Запрос на получение статуса избранности фильма
      */
-    suspend fun getFavouriteStatus(movieId: Int): Boolean =
+    suspend operator fun invoke(movieId: Int): Boolean =
         favoriteMoviesRepository.isMovieFavorite(movieId)
 
 }

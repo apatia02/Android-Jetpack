@@ -21,9 +21,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
-import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
-import com.example.androidjetpack.domain.use_case.GetThemeUseCase
-import com.example.androidjetpack.domain.use_case.SetThemeUseCase
 import com.example.androidjetpack.presentation.adapter.MovieAdapter
 import com.example.androidjetpack.presentation.adapter.MovieLoadStateAdapter
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
@@ -48,15 +45,6 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivityView : AppCompatActivity() {
-
-    @Inject
-    lateinit var getFavouriteStatusUseCase: GetFavouriteStatusUseCase
-
-    @Inject
-    lateinit var getThemeUseCase: GetThemeUseCase
-
-    @Inject
-    lateinit var setThemeUseCase: SetThemeUseCase
 
     private lateinit var binding: ActivityMainViewBinding
 
@@ -92,7 +80,7 @@ class MainActivityView : AppCompatActivity() {
         setRecyclerView()
         setObservers()
         setListeners()
-        AppCompatDelegate.setDefaultNightMode(getThemeUseCase.getTheme())
+        AppCompatDelegate.setDefaultNightMode(viewModel.getTheme())
     }
 
     private fun saveScrollPosition() {
@@ -265,7 +253,7 @@ class MainActivityView : AppCompatActivity() {
 
     private fun setAppTheme(mode: Int) {
         AppCompatDelegate.setDefaultNightMode(mode)
-        setThemeUseCase.setTheme(mode)
+        viewModel.setTheme(mode)
         recreate()
     }
 

@@ -10,7 +10,9 @@ import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
 import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
+import com.example.androidjetpack.domain.use_case.GetThemeUseCase
 import com.example.androidjetpack.domain.use_case.MoviesUseCase
+import com.example.androidjetpack.domain.use_case.SetThemeUseCase
 import com.example.androidjetpack.presentation.UiConstants.PAGE_SIZE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
@@ -27,7 +29,9 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val moviesUseCase: MoviesUseCase,
     private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase,
-    private val getFavouriteStatusUseCase: GetFavouriteStatusUseCase
+    private val getFavouriteStatusUseCase: GetFavouriteStatusUseCase,
+    private val getThemeUseCase: GetThemeUseCase,
+    private val setThemeUseCase: SetThemeUseCase
 ) : ViewModel() {
 
     private val _currentState = MutableStateFlow(NONE)
@@ -66,12 +70,16 @@ class MainViewModel @Inject constructor(
     }
 
     fun getFavouriteStatus(movieId: Int): Boolean = runBlocking {
-        getFavouriteStatusUseCase.getFavouriteStatus(movieId)
+        getFavouriteStatusUseCase.invoke(movieId)
     }
+
+    fun setTheme(mode: Int): Unit = setThemeUseCase.invoke(mode)
+
+    fun getTheme(): Int = getThemeUseCase.invoke()
 
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {
-            changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
+            changeFavouriteStatusUseCase.invoke(movieId)
         }
     }
 }

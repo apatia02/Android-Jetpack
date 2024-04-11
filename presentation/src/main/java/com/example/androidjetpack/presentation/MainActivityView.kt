@@ -46,7 +46,7 @@ class MainActivityView : AppCompatActivity() {
 
     private val adapter = EasyAdapter()
 
-    private val itemController = MovieItemController { showSnackBarMovie(title = it) }
+    private val itemController = MovieItemController { showSnackBar(message = it) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainViewBinding.inflate(layoutInflater)
@@ -109,7 +109,7 @@ class MainActivityView : AppCompatActivity() {
 
     private fun setStateScreenObserves() {
         lifecycleScope.launch {
-            viewModel.currentState.collect { currentState ->
+            viewModel.currentLoadState.collect { currentState ->
                 updateStatePresentation(currentState)
             }
         }
@@ -147,19 +147,10 @@ class MainActivityView : AppCompatActivity() {
         binding.moviesRv.adapter = adapter
     }
 
-    private fun showSnackBarError() {
+    private fun showSnackBar(message: String) {
         val snackBar = Snackbar.make(
             binding.container,
-            string.error_message_snack,
-            Snackbar.LENGTH_SHORT
-        )
-        snackBar.show()
-    }
-
-    private fun showSnackBarMovie(title: String) {
-        val snackBar = Snackbar.make(
-            binding.container,
-            title,
+            message,
             Snackbar.LENGTH_SHORT
         )
         snackBar.show()

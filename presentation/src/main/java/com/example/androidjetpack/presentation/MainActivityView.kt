@@ -29,8 +29,6 @@ import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresen
 import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import ru.surfstudio.android.easyadapter.EasyAdapter
 import ru.surfstudio.android.easyadapter.ItemList
@@ -115,20 +113,12 @@ class MainActivityView : AppCompatActivity() {
         }
         lifecycleScope.launch {
             viewModel.snackError.collect {
-                showSnackBarError()
+                showSnackBar(getString(string.error_message_snack))
             }
         }
     }
 
     private fun setMovieObserves() {
-        lifecycleScope.launch {
-            viewModel.query
-                .debounce(UiConstants.TIMEOUT_FILTER)
-                .distinctUntilChanged()
-                .collect {
-                    viewModel.getMovies(it)
-                }
-        }
         lifecycleScope.launch {
             viewModel.movies.collect { movies ->
                 adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))

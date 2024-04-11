@@ -11,6 +11,8 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -33,13 +35,34 @@ class MainViewModel @Inject constructor(
     val snackError = _snackError.asSharedFlow()
 
     private val _query = MutableStateFlow(EMPTY_STRING)
-    val query = _query.asStateFlow()
+    private val query = _query.asStateFlow()
 
     private val hasData: Boolean
         get() = _movies.value.listMovie.isNotEmpty()
 
+    private var queryJob: Job? = null
+
+    init {
+        initObservers()
+    }
+
     fun setNewQuery(query: String) {
-        _query.value = query
+        queryJob?.cancel()
+        queryJob = null
+        queryJob = viewModelScope.launch {
+            if (query != _query.value) {
+                delay(UiConstants.TIMEOUT_FILTER)
+                _query.value = query
+            }
+        }
+    }
+
+    private fun initObservers() {
+        viewModelScope.launch {
+            query.collect {
+                getMovies(query.value)
+            }
+        }
     }
 
     suspend fun getMovies(query: String = _query.value) {

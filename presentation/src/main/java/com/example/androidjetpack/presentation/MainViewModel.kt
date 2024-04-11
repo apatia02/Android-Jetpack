@@ -61,7 +61,7 @@ class MainViewModel @Inject constructor(
     private fun initObservers() {
         viewModelScope.launch {
             query.collect {
-                getMovies(query.value)
+                getMovies()
             }
         }
     }
@@ -69,9 +69,9 @@ class MainViewModel @Inject constructor(
     suspend fun getMovies(isSwr: Boolean = false) {
         try {
             when {
-                isSwr -> _currentState.value = NONE
-                hasData -> _currentState.value = TRANSPARENT_LOADING
-                else -> _currentState.value = MAIN_LOADING
+                isSwr -> _currentLoadState.value = NONE
+                hasData -> _currentLoadState.value = TRANSPARENT_LOADING
+                else -> _currentLoadState.value = MAIN_LOADING
             }
             _movies.value = moviesUseCase.getMovies(query.value)
             if (hasData) {
@@ -82,13 +82,13 @@ class MainViewModel @Inject constructor(
         } catch (e: Exception) {
             if (hasData) {
                 showSnackError()
-                _currentState.value = NONE
+                _currentLoadState.value = NONE
             } else {
                 _currentLoadState.value = ERROR
             }
         } finally {
             if (isSwr) {
-                _currentState.value = SWR_IS_NOT_VISIBLE
+                _currentLoadState.value = SWR_IS_NOT_VISIBLE
             }
         }
     }

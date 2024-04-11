@@ -14,6 +14,9 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -26,19 +29,40 @@ class MainViewModel @Inject constructor(
     private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase
 ) : ViewModel() {
 
-    private val _currentState = MutableStateFlow(NONE)
-    val currentState = _currentState.asStateFlow()
+    private val _currentLoadState = MutableStateFlow(NONE)
+    val currentLoadState = _currentLoadState.asStateFlow()
 
     private val _movies = MutableStateFlow(PagingData.empty<Movie>())
     val movies = _movies.asStateFlow()
 
     private val _query = MutableStateFlow(EMPTY_STRING)
-    val query = _query.asStateFlow()
+    private val query = _query.asStateFlow()
 
     private var loadDataJob: Job? = null
 
+    private var queryJob: Job? = null
+
+    init {
+        initObservers()
+    }
+
     fun setNewQuery(query: String) {
-        _query.value = query
+        queryJob?.cancel()
+        queryJob = null
+        queryJob = viewModelScope.launch {
+            if (query != _query.value) {
+                delay(UiConstants.TIMEOUT_FILTER)
+                _query.value = query
+            }
+        }
+    }
+
+    private fun initObservers() {
+        viewModelScope.launch {
+            query.collect {
+                getMovies()
+            }
+        }
     }
 
     fun refreshData() {
@@ -62,6 +86,17 @@ class MainViewModel @Inject constructor(
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {
             changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
+            _movies.value = movies.value.changeFavouriteStatus(movieId)
         }
+    }
+
+    private fun MovieList.changeFavouriteStatus(movieId: Int): MovieList {
+        return copy(listMovie = listMovie.map { movie ->
+            if (movie.id == movieId) {
+                movie.copy(isFavourite = !movie.isFavourite)
+            } else {
+                movie
+            }
+        })
     }
 }

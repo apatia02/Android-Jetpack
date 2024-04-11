@@ -160,26 +160,28 @@ class MainActivityView : AppCompatActivity() {
     }
 
     private fun setObservers() {
+        setMovieObserves()
+        setStateScreenObserves()
+    }
+
+    private fun setStateScreenObserves() {
         lifecycleScope.launch {
-            viewModel.currentState.collect { currentState ->
+            viewModel.currentLoadState.collect { currentState ->
                 updateStatePresentation(currentState)
             }
         }
+        lifecycleScope.launch {
+            viewModel.snackError.collect {
+                showSnackBar(getString(string.error_message_snack))
+            }
+        }
+    }
 
+    private fun setMovieObserves() {
         lifecycleScope.launch {
             viewModel.movies.collectLatest {
                 movieAdapter.submitData(it)
             }
-        }
-
-        lifecycleScope.launch {
-            viewModel.query
-                .debounce(UiConstants.TIMEOUT_FILTER)
-                .distinctUntilChanged()
-                .collect {
-                    viewModel.refreshData()
-                    binding.moviesRv.scrollToPosition(0)
-                }
         }
     }
 
@@ -188,18 +190,11 @@ class MainActivityView : AppCompatActivity() {
             movieAdapter.withLoadStateFooter(footer = MovieLoadStateAdapter { movieAdapter.retry() })
     }
 
-    private fun showSnackBarError() {
+    private fun showSnackBar(message: String) {
         val snackBar = Snackbar.make(
             binding.container,
-            string.error_message_snack,
+            message,
             Snackbar.LENGTH_SHORT
-        )
-        snackBar.show()
-    }
-
-    private fun showSnackBarMovie(title: String) {
-        val snackBar = Snackbar.make(
-            binding.container, title, Snackbar.LENGTH_SHORT
         )
         snackBar.show()
     }

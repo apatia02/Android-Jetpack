@@ -60,7 +60,7 @@ class MainViewModel @Inject constructor(
     private fun initObservers() {
         viewModelScope.launch {
             query.collect {
-                getMovies(query.value)
+                getMovies()
             }
         }
     }

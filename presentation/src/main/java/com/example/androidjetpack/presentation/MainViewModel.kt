@@ -12,6 +12,8 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHI
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.SWR_IS_NOT_VISIBLE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -24,8 +26,8 @@ class MainViewModel @Inject constructor(
     private val moviesUseCase: MoviesUseCase
 ) : ViewModel() {
 
-    private val _currentState = MutableStateFlow(NONE)
-    val currentState = _currentState.asStateFlow()
+    private val _currentLoadState = MutableStateFlow(NONE)
+    val currentLoadState = _currentLoadState.asStateFlow()
 
     private val _movies = MutableStateFlow(MovieList())
     val movies = _movies.asStateFlow()
@@ -34,13 +36,34 @@ class MainViewModel @Inject constructor(
     val snackError = _snackError.asSharedFlow()
 
     private val _query = MutableStateFlow(EMPTY_STRING)
-    val query = _query.asStateFlow()
+    private val query = _query.asStateFlow()
 
     private val hasData: Boolean
         get() = _movies.value.listMovie.isNotEmpty()
 
+    private var queryJob: Job? = null
+
+    init {
+        initObservers()
+    }
+
     fun setNewQuery(query: String) {
-        _query.value = query
+        queryJob?.cancel()
+        queryJob = null
+        queryJob = viewModelScope.launch {
+            if (query != _query.value) {
+                delay(UiConstants.TIMEOUT_FILTER)
+                _query.value = query
+            }
+        }
+    }
+
+    private fun initObservers() {
+        viewModelScope.launch {
+            query.collect {
+                getMovies(query.value)
+            }
+        }
     }
 
     suspend fun getMovies(isSwr: Boolean = false) {
@@ -52,16 +75,16 @@ class MainViewModel @Inject constructor(
             }
             _movies.value = moviesUseCase.getMovies(query.value)
             if (hasData) {
-                _currentState.value = NONE
+                _currentLoadState.value = NONE
             } else {
-                _currentState.value = NOTHING_FOUND
+                _currentLoadState.value = NOTHING_FOUND
             }
         } catch (e: Exception) {
             if (hasData) {
                 showSnackError()
                 _currentState.value = NONE
             } else {
-                _currentState.value = ERROR
+                _currentLoadState.value = ERROR
             }
         } finally {
             if (isSwr) {

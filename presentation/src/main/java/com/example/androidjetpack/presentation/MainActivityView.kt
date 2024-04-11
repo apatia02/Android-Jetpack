@@ -30,8 +30,6 @@ import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresen
 import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import ru.surfstudio.android.easyadapter.EasyAdapter
 import ru.surfstudio.android.easyadapter.ItemList
@@ -47,7 +45,7 @@ class MainActivityView : AppCompatActivity() {
 
     private val adapter = EasyAdapter()
 
-    private val itemController = MovieItemController { showSnackBarMovie(title = it) }
+    private val itemController = MovieItemController { showSnackBar(message = it) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainViewBinding.inflate(layoutInflater)
@@ -111,26 +109,18 @@ class MainActivityView : AppCompatActivity() {
 
     private fun setStateScreenObserves() {
         lifecycleScope.launch {
-            viewModel.currentState.collect { currentState ->
+            viewModel.currentLoadState.collect { currentState ->
                 updateStatePresentation(currentState)
             }
         }
         lifecycleScope.launch {
             viewModel.snackError.collect {
-                showSnackBarError()
+                showSnackBar(getString(string.error_message_snack))
             }
         }
     }
 
     private fun setMovieObserves() {
-        lifecycleScope.launch {
-            viewModel.query
-                .debounce(UiConstants.TIMEOUT_FILTER)
-                .distinctUntilChanged()
-                .collect {
-                    viewModel.getMovies()
-                }
-        }
         lifecycleScope.launch {
             viewModel.movies.collect { movies ->
                 adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
@@ -149,19 +139,10 @@ class MainActivityView : AppCompatActivity() {
         binding.moviesRv.adapter = adapter
     }
 
-    private fun showSnackBarError() {
+    private fun showSnackBar(message: String) {
         val snackBar = Snackbar.make(
             binding.container,
-            string.error_message_snack,
-            Snackbar.LENGTH_SHORT
-        )
-        snackBar.show()
-    }
-
-    private fun showSnackBarMovie(title: String) {
-        val snackBar = Snackbar.make(
-            binding.container,
-            title,
+            message,
             Snackbar.LENGTH_SHORT
         )
         snackBar.show()

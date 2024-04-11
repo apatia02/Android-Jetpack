@@ -22,8 +22,8 @@ class MainViewModel @Inject constructor(
     private val moviesUseCase: MoviesUseCase
 ) : ViewModel() {
 
-    private val _currentState = MutableStateFlow(NONE)
-    val currentState = _currentState.asStateFlow()
+    private val _currentLoadState = MutableStateFlow(NONE)
+    val currentLoadState = _currentLoadState.asStateFlow()
 
     private val _movies = MutableStateFlow(MovieList())
     val movies = _movies.asStateFlow()
@@ -43,19 +43,17 @@ class MainViewModel @Inject constructor(
     suspend fun getMovies(query: String) {
         try {
             if (hasData) {
-                _currentState.value = TRANSPARENT_LOADING
+                _currentLoadState.value = TRANSPARENT_LOADING
             } else {
-                _currentState.value = MAIN_LOADING
+                _currentLoadState.value = MAIN_LOADING
             }
             _movies.value = moviesUseCase.getMovies(query)
-            if (_currentState.value != ERROR) {
-                _currentState.value = NONE
-            }
+            _currentLoadState.value = NONE
         } catch (e: Exception) {
             if (hasData) {
                 showSnackError()
             } else {
-                _currentState.value = ERROR
+                _currentLoadState.value = ERROR
             }
         }
     }

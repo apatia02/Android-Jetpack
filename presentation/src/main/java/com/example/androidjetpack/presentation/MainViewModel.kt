@@ -104,6 +104,17 @@ class MainViewModel @Inject constructor(
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {
             changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
+            _movies.value = movies.value.changeFavouriteStatus(movieId)
         }
+    }
+
+    private fun MovieList.changeFavouriteStatus(movieId: Int): MovieList {
+        return copy(listMovie = listMovie.map { movie ->
+            if (movie.id == movieId) {
+                movie.copy(isFavourite = !movie.isFavourite)
+            } else {
+                movie
+            }
+        })
     }
 }

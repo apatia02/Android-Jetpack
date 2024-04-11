@@ -24,12 +24,10 @@ class MovieItemController(
 
         private val binding = LayoutItemFilmBinding.bind(itemView)
 
-        private var heartRes = drawable.heart_outlined
-
         override fun bind(movie: Movie): Unit = with(binding) {
             titleTv.text = movie.title
             descriptionTv.text = movie.description
-            heartRes = if (movie.isFavourite) drawable.heart_filled else drawable.heart_outlined
+            val heartRes = if (movie.isFavourite) drawable.heart_filled else drawable.heart_outlined
             heartIv.setImageResource(heartRes)
             Glide.with(itemView)
                 .load(movie.posterPath)
@@ -37,19 +35,7 @@ class MovieItemController(
                 .into(posterIv)
             dateTv.text = movie.releaseDate
             container.setOnClickListener { onClickListener(movie.title) }
-            heartIv.setOnClickListener {
-                onHeartClicked(movie.id)
-            }
-        }
-
-        private fun onHeartClicked(movieId: Int) = with(binding) {
-            changeFavouriteStatus(movieId)
-            heartRes = if (heartRes == drawable.heart_filled) {
-                drawable.heart_outlined
-            } else {
-                drawable.heart_filled
-            }
-            heartIv.setImageResource(heartRes)
+            heartIv.setOnClickListener { changeFavouriteStatus(movie.id) }
         }
     }
 }

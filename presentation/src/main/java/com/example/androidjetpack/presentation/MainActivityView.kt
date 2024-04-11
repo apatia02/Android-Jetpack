@@ -46,8 +46,10 @@ class MainActivityView : AppCompatActivity() {
     private val adapter = EasyAdapter()
 
     private val itemController =
-        MovieItemController(onClickListener = { showSnackBar(message = it) },
-            changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) })
+        MovieItemController(
+            onClickListener = { showSnackBar(message = it) },
+            changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) }
+        )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -127,7 +129,6 @@ class MainActivityView : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.movies.collect { movies ->
                 adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
-                binding.moviesRv.scrollToPosition(0)
             }
         }
     }

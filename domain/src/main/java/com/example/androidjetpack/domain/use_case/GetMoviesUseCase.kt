@@ -2,6 +2,7 @@ package com.example.androidjetpack.domain.use_case
 
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.MovieList
+import com.example.androidjetpack.domain.repository.FavoriteMoviesRepository
 import com.example.androidjetpack.domain.repository.MovieRepository
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -9,30 +10,33 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * UseCase, который проставляет к спискам фильмам, являются ли они избранными.
+ * UseCase, который получает списко фильмов.
  */
-class MoviesUseCase @Inject constructor(
-    private val moviesRepository: MovieRepository
+class GetMoviesUseCase @Inject constructor(
+    private val moviesRepository: MovieRepository,
+    private val favoriteMoviesRepository: FavoriteMoviesRepository
 ) {
 
     /**
      * Запрос на получение фильмов по фильтру, если фильтр пустой возвращает все фильмы
      */
-    suspend fun getMovies(query: String, page: Int): MovieList {
+    suspend operator fun invoke(query: String, page: Int): MovieList {
         val listMovie = if (query == EMPTY_STRING) {
             moviesRepository.getMovies(page)
         } else {
             moviesRepository.searchMovies(query, page)
         }
-        return listMovie.setRussianDate()
+        return listMovie.setFavoriteStatusAndRussianDate()
     }
 
     /**
+     * Установка у фильмов статуса избранности
      * Установка русской даты для фильмов
      */
-    private fun MovieList.setRussianDate(): MovieList =
+    private suspend fun MovieList.setFavoriteStatusAndRussianDate(): MovieList =
         this.copy(listMovie = this.listMovie.map { movie ->
             movie.copy(
+                isFavourite = favoriteMoviesRepository.isMovieFavorite(movie.id),
                 releaseDate = movie.releaseDate.formatRussianDate()
             )
         })
@@ -44,9 +48,7 @@ class MoviesUseCase @Inject constructor(
         val inputFormatter = DateTimeFormatter.ofPattern(ENGLISH_DATE_PATTERN, Locale.ENGLISH)
         val date = LocalDate.parse(this, inputFormatter)
         val outputFormatter = DateTimeFormatter.ofPattern(RUSSIAN_DATE_PATTERN, Locale(RUSSIAN))
-        return runCatching {
-            date.format(outputFormatter)
-        }.getOrDefault(EMPTY_STRING)
+        return date.format(outputFormatter)
     }
 
     private companion object {

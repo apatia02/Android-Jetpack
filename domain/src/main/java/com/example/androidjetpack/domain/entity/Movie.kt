@@ -7,6 +7,7 @@ import java.io.Serializable
 
 /**
  * Доменная модель фильма
+ * @property isFavourite Показывает, является ли фильм избранным.
  * @property adult Показывает, подходит ли фильм для взрослой аудитории.
  * @property backdropPath Путь к изображению фона фильма.
  * @property genreIds Список идентификаторов жанров, связанных с фильмом.
@@ -23,6 +24,7 @@ import java.io.Serializable
  * @property voteCount Количество голосов, полученных фильмом.
  */
 data class Movie(
+    val isFavourite: Boolean = false,
     val adult: Boolean = false,
     val backdropPath: String = EMPTY_STRING,
     val genreIds: List<Int> = emptyList(),

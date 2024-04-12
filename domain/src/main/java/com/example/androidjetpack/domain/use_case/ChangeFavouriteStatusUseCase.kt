@@ -13,7 +13,7 @@ class ChangeFavouriteStatusUseCase @Inject constructor(
     /**
      * Запрос на получение фильмов по фильтру, если фильтр пустой возвращает все фильмы
      */
-    suspend fun changeFavouriteStatus(movieId: Int) {
+    suspend operator fun invoke(movieId: Int) {
         if (favoriteMoviesRepository.isMovieFavorite(movieId)) {
             favoriteMoviesRepository.removeFavoriteMovie(movieId)
         } else {

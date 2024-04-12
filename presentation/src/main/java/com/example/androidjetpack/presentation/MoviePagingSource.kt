@@ -3,18 +3,18 @@ package com.example.androidjetpack.presentation
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.example.androidjetpack.domain.entity.Movie
-import com.example.androidjetpack.domain.use_case.MoviesUseCase
+import com.example.androidjetpack.domain.use_case.GetMoviesUseCase
 import javax.inject.Inject
 
 class MoviePagingSource @Inject constructor(
-    private val moviesUseCase: MoviesUseCase,
+    private val getMoviesUseCase: GetMoviesUseCase,
     private val query: String
 ) : PagingSource<Int, Movie>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Movie> {
         return try {
             val nextPage = params.key ?: 1
-            val movies = moviesUseCase.getMovies(query, nextPage)
+            val movies = getMoviesUseCase.invoke(query, nextPage)
             LoadResult.Page(
                 data = movies.listMovie,
                 prevKey = if (nextPage == 1) null else nextPage - 1,

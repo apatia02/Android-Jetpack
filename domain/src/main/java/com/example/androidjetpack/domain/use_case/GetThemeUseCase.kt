@@ -5,5 +5,5 @@ import javax.inject.Inject
 
 class GetThemeUseCase @Inject constructor(private val settingsRepository: SettingsRepository) {
 
-    fun getTheme(): Int = settingsRepository.getThemeMode()
+    operator fun invoke(): Int = settingsRepository.getThemeMode()
 }

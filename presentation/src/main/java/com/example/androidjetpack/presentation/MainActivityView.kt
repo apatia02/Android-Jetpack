@@ -14,7 +14,6 @@ import androidx.core.view.isGone
 import androidx.core.view.marginBottom
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.LoadState
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.androidjetpack.base_resources.R.string

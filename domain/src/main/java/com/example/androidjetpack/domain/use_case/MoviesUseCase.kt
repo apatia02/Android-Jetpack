@@ -2,6 +2,7 @@ package com.example.androidjetpack.domain.use_case
 
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.MovieList
+import com.example.androidjetpack.domain.repository.FavoriteMoviesRepository
 import com.example.androidjetpack.domain.repository.MovieRepository
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -12,7 +13,8 @@ import javax.inject.Inject
  * UseCase, который проставляет к спискам фильмам, являются ли они избранными.
  */
 class MoviesUseCase @Inject constructor(
-    private val moviesRepository: MovieRepository
+    private val moviesRepository: MovieRepository,
+    private val favoriteMoviesRepository: FavoriteMoviesRepository
 ) {
 
     /**
@@ -24,15 +26,17 @@ class MoviesUseCase @Inject constructor(
         } else {
             moviesRepository.searchMovies(query, page)
         }
-        return listMovie.setRussianDate()
+        return listMovie.setFavoriteStatusAndRussianDate()
     }
 
     /**
+     * Установка у фильмов статуса избранности
      * Установка русской даты для фильмов
      */
-    private fun MovieList.setRussianDate(): MovieList =
+    private suspend fun MovieList.setFavoriteStatusAndRussianDate(): MovieList =
         this.copy(listMovie = this.listMovie.map { movie ->
             movie.copy(
+                isFavourite = favoriteMoviesRepository.isMovieFavorite(movie.id),
                 releaseDate = movie.releaseDate.formatRussianDate()
             )
         })

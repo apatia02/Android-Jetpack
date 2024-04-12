@@ -2,6 +2,7 @@ package com.example.androidjetpack.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.LoadState
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -10,14 +11,17 @@ import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
 import com.example.androidjetpack.domain.use_case.MoviesUseCase
 import com.example.androidjetpack.presentation.UiConstants.PAGE_SIZE
-import com.example.androidjetpack.presentation.loading_state.LoadViewState
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -32,11 +36,22 @@ class MainViewModel @Inject constructor(
     private val _currentLoadState = MutableStateFlow(NONE)
     val currentLoadState = _currentLoadState.asStateFlow()
 
+    private val _currentAdapterState = MutableStateFlow<LoadState>(LoadState.Loading)
+    private val currentAdapterState = _currentAdapterState.asStateFlow()
+
     private val _movies = MutableStateFlow(PagingData.empty<Movie>())
     val movies = _movies.asStateFlow()
 
+    private val _snackError = MutableSharedFlow<Unit>()
+    val snackError = _snackError.asSharedFlow()
+
+    private val _isSwrVisible = MutableStateFlow(false)
+    val isSwrVisible = _isSwrVisible.asStateFlow()
+
     private val _query = MutableStateFlow(EMPTY_STRING)
     private val query = _query.asStateFlow()
+
+    var hasData = false
 
     private var loadDataJob: Job? = null
 
@@ -60,23 +75,79 @@ class MainViewModel @Inject constructor(
     private fun initObservers() {
         viewModelScope.launch {
             query.collect {
-                getMovies()
+                getPagingMovies()
+            }
+        }
+        viewModelScope.launch {
+            currentAdapterState.collect {
+                renderAdapterState(it)
             }
         }
     }
 
     fun refreshData() {
         loadDataJob?.cancel()
+        loadDataJob = null
         loadDataJob = viewModelScope.launch {
             getPagingMovies(query.value)
         }
     }
 
-    fun setLoadingState(state: LoadViewState) {
-        _currentState.value = state
+    fun setAdapterState(state: LoadState) {
+        _currentAdapterState.value = state
     }
 
-    private suspend fun getPagingMovies(query: String) {
+    fun setSwrVisible() {
+        _isSwrVisible.value = true
+    }
+
+    private fun renderAdapterState(state: LoadState) {
+        when (state) {
+            is LoadState.Loading -> {
+                when {
+                    isSwrVisible.value -> {
+                        _currentLoadState.value = NONE
+                    }
+
+                    hasData -> {
+                        _currentLoadState.value = TRANSPARENT_LOADING
+                    }
+
+                    else -> {
+                        _currentLoadState.value = MAIN_LOADING
+                    }
+                }
+            }
+
+            is LoadState.Error -> {
+                if (hasData) {
+                    viewModelScope.launch {
+                        _snackError.emit(Unit)
+                    }
+                } else {
+                    _currentLoadState.value = ERROR
+                }
+                if (isSwrVisible.value) {
+                    _isSwrVisible.value = false
+                }
+            }
+
+            is LoadState.NotLoading -> {
+                if (isSwrVisible.value) {
+                    _isSwrVisible.value = false
+                }
+                if (currentLoadState.value != NONE) {
+                    if (hasData) {
+                        _currentLoadState.value = NONE
+                    } else {
+                        _currentLoadState.value = NOTHING_FOUND
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun getPagingMovies(query: String = _query.value) {
         val pager = Pager(config = PagingConfig(pageSize = PAGE_SIZE)) {
             MoviePagingSource(moviesUseCase, query)
         }.flow
@@ -86,17 +157,7 @@ class MainViewModel @Inject constructor(
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {
             changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
-            _movies.value = movies.value.changeFavouriteStatus(movieId)
+            refreshData()
         }
-    }
-
-    private fun MovieList.changeFavouriteStatus(movieId: Int): MovieList {
-        return copy(listMovie = listMovie.map { movie ->
-            if (movie.id == movieId) {
-                movie.copy(isFavourite = !movie.isFavourite)
-            } else {
-                movie
-            }
-        })
     }
 }

@@ -47,32 +47,20 @@ class MovieAdapter(
             }
         }
 
-        private var heartRes = drawable.heart_outlined
         fun bind(
             movie: Movie, onClickListener: (String) -> Unit, changeFavouriteStatus: (Int) -> Unit
         ) = with(binding) {
             titleTv.text = movie.title
             descriptionTv.text = movie.description
-            heartRes = if (movie.isFavourite) drawable.heart_filled else drawable.heart_outlined
+            val heartRes = if (movie.isFavourite) drawable.heart_filled else drawable.heart_outlined
             heartIv.setImageResource(heartRes)
             Glide.with(itemView).load(movie.posterPath).placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate
             container.setOnClickListener { onClickListener(movie.title) }
             heartIv.setOnClickListener {
-                clickOnHeart(movie.id, changeFavouriteStatus)
+                changeFavouriteStatus(movie.id)
             }
         }
-
-        private fun clickOnHeart(movieId: Int, changeFavouriteStatus: (Int) -> Unit) =
-            with(binding) {
-                changeFavouriteStatus(movieId)
-                heartRes = if (heartRes == drawable.heart_filled) {
-                    drawable.heart_outlined
-                } else {
-                    drawable.heart_filled
-                }
-                heartIv.setImageResource(heartRes)
-            }
     }
 }

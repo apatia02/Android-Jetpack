@@ -13,7 +13,6 @@ import androidx.core.view.isGone
 import androidx.core.view.marginBottom
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.LoadState
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.presentation.adapter.MovieAdapter
@@ -26,7 +25,6 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
-import com.example.androidjetpack.presentation.loading_state.LoadViewState.SWR_IS_NOT_VISIBLE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import com.example.androidjetpack.presentation.loading_state.MainLoadingStatePresentation
 import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresentation
@@ -34,8 +32,6 @@ import com.example.androidjetpack.presentation.loading_state.TransparentLoadingS
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -48,11 +44,10 @@ class MainActivityView : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     private val movieAdapter =
-        MovieAdapter(onClickListener = { showSnackBarMovie(title = it) },
-            changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) })
-
-    private val hasData: Boolean
-        get() = movieAdapter.itemCount > 0
+        MovieAdapter(
+            onClickListener = { showSnackBar(it) },
+            changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) }
+        )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,59 +86,22 @@ class MainActivityView : AppCompatActivity() {
 
     private fun setListeners() = with(binding) {
         filterEt.addTextChangedListener { newText ->
+            viewModel.hasData = movieAdapter.itemCount > 0
             viewModel.setNewQuery(newText.toString())
             clearFilterBtn.isGone = newText.toString().isEmpty()
         }
         clearFilterBtn.setOnClickListener { clearFilter() }
         swipeRefresh.setOnRefreshListener {
+            viewModel.setSwrVisible()
             viewModel.refreshData()
         }
         addAdapterListener()
     }
 
-    private fun addAdapterListener() = with(binding) {
+    private fun addAdapterListener() {
         movieAdapter.addLoadStateListener { loadState ->
-            when (loadState.refresh) {
-                is LoadState.Loading -> {
-                    when {
-                        swipeRefresh.isRefreshing -> {
-                            viewModel.setLoadingState(NONE)
-                        }
-
-                        hasData -> {
-                            viewModel.setLoadingState(TRANSPARENT_LOADING)
-                        }
-
-                        else -> {
-                            viewModel.setLoadingState(MAIN_LOADING)
-                        }
-                    }
-                }
-
-                is LoadState.Error -> {
-                    if (hasData) {
-                        showSnackBarError()
-                    } else {
-                        viewModel.setLoadingState(ERROR)
-                    }
-                    if (swipeRefresh.isRefreshing) {
-                        viewModel.setLoadingState(SWR_IS_NOT_VISIBLE)
-                    }
-                }
-
-                is LoadState.NotLoading -> {
-                    if (swipeRefresh.isRefreshing) {
-                        viewModel.setLoadingState(SWR_IS_NOT_VISIBLE)
-                    }
-                    if (viewModel.currentState.value != NONE) {
-                        if (hasData) {
-                            viewModel.setLoadingState(NONE)
-                        } else {
-                            viewModel.setLoadingState(NOTHING_FOUND)
-                        }
-                    }
-                }
-            }
+            viewModel.hasData = movieAdapter.itemCount > 0
+            viewModel.setAdapterState(loadState.refresh)
         }
     }
 
@@ -171,8 +129,13 @@ class MainActivityView : AppCompatActivity() {
             }
         }
         lifecycleScope.launch {
-            viewModel.snackError.collect {
+            viewModel.snackError.collectLatest {
                 showSnackBar(getString(string.error_message_snack))
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.isSwrVisible.collectLatest {
+                binding.swipeRefresh.isRefreshing = it
             }
         }
     }
@@ -203,10 +166,6 @@ class MainActivityView : AppCompatActivity() {
         when (currentState) {
             NONE -> {
                 loadStatePresentation?.hideState()
-            }
-
-            SWR_IS_NOT_VISIBLE -> {
-                swipeRefresh.isRefreshing = false
             }
 
             TRANSPARENT_LOADING -> {

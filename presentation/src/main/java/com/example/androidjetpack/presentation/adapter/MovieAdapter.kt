@@ -48,7 +48,7 @@ class MovieAdapter(
         }
 
         fun bind(
-            movie: Movie, onClickListener: (String) -> Unit, changeFavouriteStatus: (Int) -> Unit
+            movie: Movie, onClickListener: (Movie) -> Unit, changeFavouriteStatus: (Int) -> Unit
         ) = with(binding) {
             titleTv.text = movie.title
             descriptionTv.text = movie.description
@@ -58,9 +58,7 @@ class MovieAdapter(
                 .into(posterIv)
             dateTv.text = movie.releaseDate
             container.setOnClickListener { onClickListener(movie) }
-            heartIv.setOnClickListener {
-                changeFavouriteStatus(movie.id)
-            }
+            heartIv.setOnClickListener { changeFavouriteStatus(movie.id) }
         }
     }
 }

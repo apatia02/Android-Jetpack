@@ -7,11 +7,11 @@ import javax.inject.Inject
 /**
  * UseCase, который по списку id жанров выдает сами жанры
  */
-class GenresUseCase @Inject constructor(
+class GetGenresWithIdUseCase @Inject constructor(
     private val moviesRepository: MovieRepository
 ) {
 
-    suspend fun getGenresFilteredWithId(listGenreId: List<Int>): GenreList {
+    suspend operator fun invoke(listGenreId: List<Int>): GenreList {
         return moviesRepository.getGenres().filterWithListId(listGenreId)
     }
 

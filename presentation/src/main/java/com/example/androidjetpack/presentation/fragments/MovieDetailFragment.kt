@@ -12,19 +12,14 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.androidjetpack.base_resources.R
 import com.example.androidjetpack.domain.entity.Movie
-import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
 import com.example.androidjetpack.presentation.UiConstants.KEY_MOVIE_BUNDLE
 import com.example.androidjetpack.presentation.UiConstants.RATING_FORMAT
 import com.example.androidjetpack.presentation.databinding.FragmentMovieDetailBinding
 import com.example.androidjetpack.presentation.view_models.DetailMovieViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MovieDetailFragment : Fragment() {
-
-    @Inject
-    lateinit var getFavouriteStatusUseCase: GetFavouriteStatusUseCase
 
     private lateinit var binding: FragmentMovieDetailBinding
 
@@ -67,9 +62,11 @@ class MovieDetailFragment : Fragment() {
         languageTv.text = movie.originalLanguage
         rateTv.text = getString(R.string.rating, String.format(RATING_FORMAT, movie.voteAverage))
         lifecycleScope.launchWhenStarted {
-            heartRes =
-                if (getFavouriteStatusUseCase.getFavouriteStatus(movie.id)) R.drawable.heart_filled
-                else R.drawable.heart_outlined
+            heartRes = if (movie.isFavourite) {
+                R.drawable.heart_filled
+            } else {
+                R.drawable.heart_outlined
+            }
             heartIv.setImageResource(heartRes)
         }
     }

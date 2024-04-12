@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidjetpack.domain.entity.GenreList
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
-import com.example.androidjetpack.domain.use_case.GenresUseCase
+import com.example.androidjetpack.domain.use_case.GetGenresWithIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DetailMovieViewModel @Inject constructor(
     private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase,
-    private val genresUseCase: GenresUseCase
+    private val getGenresWithIdUseCase: GetGenresWithIdUseCase
 ) : ViewModel() {
 
     private val _genres = MutableStateFlow(GenreList())
@@ -22,13 +22,13 @@ class DetailMovieViewModel @Inject constructor(
 
     fun setGenres(listGenreId: List<Int>) {
         viewModelScope.launch {
-            _genres.value = genresUseCase.getGenresFilteredWithId(listGenreId)
+            _genres.value = getGenresWithIdUseCase.invoke(listGenreId)
         }
     }
 
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {
-            changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
+            changeFavouriteStatusUseCase.invoke(movieId)
         }
     }
 }

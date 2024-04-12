@@ -11,8 +11,7 @@ import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.presentation.databinding.LayoutItemFilmBinding
 
 class MovieAdapter(
-    private val getFavouriteStatus: (Int) -> Boolean,
-    private val onClickListener: (String) -> Unit, private val changeFavouriteStatus: (Int) -> Unit,
+    private val onClickListener: (String) -> Unit, private val changeFavouriteStatus: (Int) -> Unit
 ) : PagingDataAdapter<Movie, MovieAdapter.MovieViewHolder>(MovieDiffCallback) {
 
     companion object {
@@ -32,12 +31,7 @@ class MovieAdapter(
     override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
         val movie = getItem(position)
         if (movie != null) {
-            holder.bind(
-                movie = movie,
-                getFavouriteStatus = getFavouriteStatus,
-                onClickListener = onClickListener,
-                changeFavouriteStatus = changeFavouriteStatus,
-            )
+            holder.bind(movie, onClickListener, changeFavouriteStatus)
         }
     }
 
@@ -53,40 +47,20 @@ class MovieAdapter(
             }
         }
 
-        private var heartRes = drawable.heart_outlined
-
         fun bind(
-            movie: Movie,
-            getFavouriteStatus: (Int) -> Boolean,
-            onClickListener: (String) -> Unit,
-            changeFavouriteStatus: (Int) -> Unit,
+            movie: Movie, onClickListener: (String) -> Unit, changeFavouriteStatus: (Int) -> Unit
         ) = with(binding) {
             titleTv.text = movie.title
             descriptionTv.text = movie.description
-            heartRes = if (getFavouriteStatus(movie.id)) {
-                drawable.heart_filled
-            } else {
-                drawable.heart_outlined
-            }
+            val heartRes = if (movie.isFavourite) drawable.heart_filled else drawable.heart_outlined
             heartIv.setImageResource(heartRes)
             Glide.with(itemView).load(movie.posterPath).placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate
             container.setOnClickListener { onClickListener(movie.title) }
             heartIv.setOnClickListener {
-                onHeartClicked(movie.id, changeFavouriteStatus)
+                changeFavouriteStatus(movie.id)
             }
         }
-
-        private fun onHeartClicked(movieId: Int, changeFavouriteStatus: (Int) -> Unit) =
-            with(binding) {
-                changeFavouriteStatus(movieId)
-                heartRes = if (heartRes == drawable.heart_filled) {
-                    drawable.heart_outlined
-                } else {
-                    drawable.heart_filled
-                }
-                heartIv.setImageResource(heartRes)
-            }
     }
 }

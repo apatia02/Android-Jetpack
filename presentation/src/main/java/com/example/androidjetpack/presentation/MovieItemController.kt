@@ -8,7 +8,7 @@ import com.example.androidjetpack.presentation.databinding.LayoutItemFilmBinding
 import ru.surfstudio.android.easyadapter.controller.BindableItemController
 import ru.surfstudio.android.easyadapter.holder.BindableViewHolder
 
-class MovieItemController() :
+class MovieItemController(val onClickListener: (String) -> Unit) :
     BindableItemController<Movie, MovieItemController.Holder>() {
 
     override fun createViewHolder(parent: ViewGroup): Holder = Holder(parent)
@@ -31,6 +31,7 @@ class MovieItemController() :
                 .placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate
+            container.setOnClickListener { onClickListener(movie.title) }
         }
     }
 }

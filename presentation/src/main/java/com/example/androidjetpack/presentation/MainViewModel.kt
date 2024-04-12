@@ -6,12 +6,13 @@ import androidx.paging.LoadState
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
-import com.example.androidjetpack.domain.use_case.GetFavouriteStatusUseCase
+import com.example.androidjetpack.domain.use_case.GetMoviesUseCase
 import com.example.androidjetpack.domain.use_case.GetThemeUseCase
-import com.example.androidjetpack.domain.use_case.MoviesUseCase
 import com.example.androidjetpack.domain.use_case.SetThemeUseCase
 import com.example.androidjetpack.presentation.UiConstants.PAGE_SIZE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
@@ -32,8 +33,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val moviesUseCase: MoviesUseCase,
-    private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase
+    private val getMoviesUseCase: GetMoviesUseCase,
+    private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase,
     private val getThemeUseCase: GetThemeUseCase,
     private val setThemeUseCase: SetThemeUseCase
 ) : ViewModel() {
@@ -156,8 +157,8 @@ class MainViewModel @Inject constructor(
 
     private suspend fun getPagingMovies(query: String = _query.value) {
         val pager = Pager(config = PagingConfig(pageSize = PAGE_SIZE)) {
-            MoviePagingSource(moviesUseCase, query)
-        }.flow
+            MoviePagingSource(getMoviesUseCase, query)
+        }.flow.cachedIn(viewModelScope)
         _movies.value = pager.first()
     }
 
@@ -167,8 +168,14 @@ class MainViewModel @Inject constructor(
 
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {
-            refreshData()
             changeFavouriteStatusUseCase.invoke(movieId)
+            _movies.value = movies.value.map { movie ->
+                if (movie.id == movieId) {
+                    movie.copy(isFavourite = !movie.isFavourite)
+                } else {
+                    movie
+                }
+            }
         }
     }
 }

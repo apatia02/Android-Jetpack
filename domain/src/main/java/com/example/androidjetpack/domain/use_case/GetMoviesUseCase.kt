@@ -10,9 +10,9 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * UseCase, который проставляет к спискам фильмам, являются ли они избранными.
+ * UseCase, который получает списко фильмов.
  */
-class MoviesUseCase @Inject constructor(
+class GetMoviesUseCase @Inject constructor(
     private val moviesRepository: MovieRepository,
     private val favoriteMoviesRepository: FavoriteMoviesRepository
 ) {

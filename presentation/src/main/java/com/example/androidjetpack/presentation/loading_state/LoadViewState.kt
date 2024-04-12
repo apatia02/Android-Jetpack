@@ -9,5 +9,4 @@ enum class LoadViewState {
     TRANSPARENT_LOADING,
     NOTHING_FOUND,
     ERROR,
-    SWR_IS_NOT_VISIBLE,
 }

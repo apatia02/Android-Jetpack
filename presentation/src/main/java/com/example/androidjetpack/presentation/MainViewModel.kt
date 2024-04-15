@@ -51,7 +51,6 @@ class MainViewModel @Inject constructor(
 
     fun setNewQuery(query: String) {
         queryJob?.cancel()
-        queryJob = null
         queryJob = viewModelScope.launch {
             if (query != _query.value) {
                 delay(UiConstants.TIMEOUT_FILTER)

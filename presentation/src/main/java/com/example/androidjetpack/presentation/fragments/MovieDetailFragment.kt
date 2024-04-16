@@ -27,8 +27,6 @@ class MovieDetailFragment : Fragment() {
 
     private lateinit var movie: Movie
 
-    private var heartRes = R.drawable.heart_outlined
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -61,18 +59,11 @@ class MovieDetailFragment : Fragment() {
         descriptionTv.text = movie.description
         languageTv.text = movie.originalLanguage
         rateTv.text = getString(R.string.rating, String.format(RATING_FORMAT, movie.voteAverage))
-        lifecycleScope.launchWhenStarted {
-            heartRes = if (movie.isFavourite) {
-                R.drawable.heart_filled
-            } else {
-                R.drawable.heart_outlined
-            }
-            heartIv.setImageResource(heartRes)
-        }
+        viewModel.setInitialStatus(movie.isFavourite)
     }
 
     private fun setListeners() = with(binding) {
-        heartIv.setOnClickListener { clickOnHeart() }
+        heartIv.setOnClickListener { viewModel.changeFavouriteStatus(movie.id) }
         arrowBackIv.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
@@ -84,16 +75,15 @@ class MovieDetailFragment : Fragment() {
                 genresCv.setGenres(it.genres)
             }
         }
-    }
-
-
-    private fun clickOnHeart() = with(binding) {
-        viewModel.changeFavouriteStatus(movie.id)
-        heartRes = if (heartRes == R.drawable.heart_filled) {
-            R.drawable.heart_outlined
-        } else {
-            R.drawable.heart_filled
+        lifecycleScope.launchWhenStarted {
+            viewModel.isFavourite.collect {
+                val heartRes = if (it) {
+                    R.drawable.heart_filled
+                } else {
+                    R.drawable.heart_outlined
+                }
+                heartIv.setImageResource(heartRes)
+            }
         }
-        heartIv.setImageResource(heartRes)
     }
 }

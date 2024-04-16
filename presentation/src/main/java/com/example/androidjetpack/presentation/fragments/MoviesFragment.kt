@@ -17,9 +17,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.androidjetpack.base_resources.R
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.Movie
+import com.example.androidjetpack.presentation.R
 import com.example.androidjetpack.presentation.UiConstants.KEY_MOVIE_BUNDLE
 import com.example.androidjetpack.presentation.adapter.MovieAdapter
 import com.example.androidjetpack.presentation.adapter.MovieLoadStateAdapter
@@ -42,6 +42,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.example.androidjetpack.base_resources.R as baseResourcesR
 
 
 @AndroidEntryPoint
@@ -114,30 +115,25 @@ class MoviesFragment : Fragment() {
         val detailFragment = MovieDetailFragment()
         detailFragment.arguments = bundle
         parentFragmentManager.beginTransaction()
-            .replace(com.example.androidjetpack.presentation.R.id.fragmentContainer, detailFragment)
+            .replace(R.id.fragmentContainer, detailFragment)
             .addToBackStack(null)
             .commit()
     }
 
     private fun setListeners() = with(binding) {
         filterEt.addTextChangedListener { newText ->
-            viewModel.hasData = movieAdapter.itemCount > 0
             viewModel.setNewQuery(newText.toString())
             clearFilterBtn.isGone = newText.toString().isEmpty()
         }
         clearFilterBtn.setOnClickListener { clearFilter() }
-        swipeRefresh.setOnRefreshListener {
-            viewModel.setSwrVisible()
-            viewModel.refreshData()
-        }
+        swipeRefresh.setOnRefreshListener { viewModel.refreshData(isSwr = true) }
         addAdapterListener()
         settingsIv.setOnClickListener { showThemeSelectionDialog() }
     }
 
     private fun addAdapterListener() {
         movieAdapter.addLoadStateListener { loadState ->
-            viewModel.hasData = movieAdapter.itemCount > 0
-            viewModel.setAdapterState(loadState.refresh)
+            viewModel.renderAdapterState(loadState.refresh, movieAdapter.itemCount > 0)
         }
     }
 
@@ -166,7 +162,7 @@ class MoviesFragment : Fragment() {
         }
         lifecycleScope.launch {
             viewModel.snackError.collectLatest {
-                showSnackBar(getString(R.string.error_message_snack))
+                showSnackBar(getString(baseResourcesR.string.error_message_snack))
             }
         }
         lifecycleScope.launch {
@@ -200,8 +196,11 @@ class MoviesFragment : Fragment() {
 
     private fun showThemeSelectionDialog() {
         val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle(getString(R.string.title_theme_dialog))
-        val themes = arrayOf(getString(R.string.light_theme), getString(R.string.dark_theme))
+        builder.setTitle(getString(baseResourcesR.string.title_theme_dialog))
+        val themes = arrayOf(
+            getString(baseResourcesR.string.light_theme),
+            getString(baseResourcesR.string.dark_theme)
+        )
         builder.setItems(themes) { _, which ->
             when (which) {
                 0 -> setAppTheme(AppCompatDelegate.MODE_NIGHT_NO)
@@ -236,7 +235,8 @@ class MoviesFragment : Fragment() {
 
             NOTHING_FOUND -> {
                 loadStatePresentation = NotFoundStatePresentation(
-                    placeHolder, getString(R.string.nothing_found_message, filterEt.text)
+                    placeHolder,
+                    getString(baseResourcesR.string.nothing_found_message, filterEt.text)
                 )
                 loadStatePresentation?.showState()
             }

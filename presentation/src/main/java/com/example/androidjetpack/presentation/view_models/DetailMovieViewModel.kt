@@ -20,13 +20,21 @@ class DetailMovieViewModel @Inject constructor(
     private val _genres = MutableStateFlow(GenreList())
     val genres = _genres.asStateFlow()
 
+    private val _isFavourite = MutableStateFlow(false)
+    val isFavourite = _isFavourite.asStateFlow()
+
     fun setGenres(listGenreId: List<Int>) {
         viewModelScope.launch {
             _genres.value = getGenresWithIdUseCase.invoke(listGenreId)
         }
     }
 
+    fun setInitialStatus(isFavourite: Boolean) {
+        _isFavourite.value = isFavourite
+    }
+
     fun changeFavouriteStatus(movieId: Int) {
+        _isFavourite.value = !_isFavourite.value
         viewModelScope.launch {
             changeFavouriteStatusUseCase.invoke(movieId)
         }

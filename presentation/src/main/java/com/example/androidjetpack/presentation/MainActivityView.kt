@@ -23,6 +23,7 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
+import com.example.androidjetpack.presentation.loading_state.LoadViewState.SWR_IS_NOT_VISIBLE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import com.example.androidjetpack.presentation.loading_state.MainLoadingStatePresentation
 import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresentation
@@ -86,6 +87,7 @@ class MainActivityView : AppCompatActivity() {
             clearFilterBtn.isGone = newText.toString().isEmpty()
         }
         clearFilterBtn.setOnClickListener { clearFilter() }
+        swipeRefresh.setOnRefreshListener { getMovies(isSwr = true) }
     }
 
     private fun clearFilter() = with(binding) {
@@ -127,9 +129,9 @@ class MainActivityView : AppCompatActivity() {
         }
     }
 
-    private fun getMovies() {
+    private fun getMovies(isSwr: Boolean = false) {
         lifecycleScope.launch {
-            viewModel.getMovies()
+            viewModel.getMovies(isSwr = isSwr)
         }
     }
 
@@ -150,6 +152,10 @@ class MainActivityView : AppCompatActivity() {
         when (currentState) {
             NONE -> {
                 loadStatePresentation?.hideState()
+            }
+
+            SWR_IS_NOT_VISIBLE -> {
+                swipeRefresh.isRefreshing = false
             }
 
             TRANSPARENT_LOADING -> {

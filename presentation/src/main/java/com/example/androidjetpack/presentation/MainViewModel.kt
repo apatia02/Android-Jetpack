@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.MovieList
+import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
 import com.example.androidjetpack.domain.use_case.MoviesUseCase
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
@@ -23,7 +24,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val moviesUseCase: MoviesUseCase
+    private val moviesUseCase: MoviesUseCase,
+    private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase
 ) : ViewModel() {
 
     private val _currentLoadState = MutableStateFlow(NONE)
@@ -96,5 +98,22 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             _snackError.emit(Unit)
         }
+    }
+
+    fun changeFavouriteStatus(movieId: Int) {
+        viewModelScope.launch {
+            changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
+            _movies.value = movies.value.changeFavouriteStatus(movieId)
+        }
+    }
+
+    private fun MovieList.changeFavouriteStatus(movieId: Int): MovieList {
+        return copy(listMovie = listMovie.map { movie ->
+            if (movie.id == movieId) {
+                movie.copy(isFavourite = !movie.isFavourite)
+            } else {
+                movie
+            }
+        })
     }
 }

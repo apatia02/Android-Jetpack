@@ -42,9 +42,6 @@ class MoviesViewModel @Inject constructor(
     private val _currentLoadState = MutableStateFlow(NONE)
     val currentLoadState = _currentLoadState.asStateFlow()
 
-    private val _currentAdapterState = MutableStateFlow<LoadState>(LoadState.Loading)
-    private val currentAdapterState = _currentAdapterState.asStateFlow()
-
     private val _movies = MutableStateFlow(PagingData.empty<Movie>())
     val movies = _movies.asStateFlow()
 
@@ -57,13 +54,11 @@ class MoviesViewModel @Inject constructor(
     private val _query = MutableStateFlow(EMPTY_STRING)
     private val query = _query.asStateFlow()
 
+    var scrollPosition = 0
+
     private var loadDataJob: Job? = null
 
     private var queryJob: Job? = null
-
-    var hasData = false
-
-    var scrollPosition = 0
 
     init {
         initObservers()
@@ -71,7 +66,6 @@ class MoviesViewModel @Inject constructor(
 
     fun setNewQuery(query: String) {
         queryJob?.cancel()
-        queryJob = null
         queryJob = viewModelScope.launch {
             if (query != _query.value) {
                 delay(UiConstants.TIMEOUT_FILTER)
@@ -86,30 +80,17 @@ class MoviesViewModel @Inject constructor(
                 getPagingMovies()
             }
         }
-        viewModelScope.launch {
-            currentAdapterState.collect {
-                renderAdapterState(it)
-            }
-        }
     }
 
-    fun refreshData() {
+    fun refreshData(isSwr: Boolean = false) {
         loadDataJob?.cancel()
-        loadDataJob = null
+        _isSwrVisible.value = isSwr
         loadDataJob = viewModelScope.launch {
             getPagingMovies(query.value)
         }
     }
 
-    fun setAdapterState(state: LoadState) {
-        _currentAdapterState.value = state
-    }
-
-    fun setSwrVisible() {
-        _isSwrVisible.value = true
-    }
-
-    private fun renderAdapterState(state: LoadState) {
+    fun renderAdapterState(state: LoadState, hasData: Boolean) {
         when (state) {
             is LoadState.Loading -> {
                 when {
@@ -135,15 +116,11 @@ class MoviesViewModel @Inject constructor(
                 } else {
                     _currentLoadState.value = ERROR
                 }
-                if (isSwrVisible.value) {
-                    _isSwrVisible.value = false
-                }
+                _isSwrVisible.value = false
             }
 
             is LoadState.NotLoading -> {
-                if (isSwrVisible.value) {
-                    _isSwrVisible.value = false
-                }
+                _isSwrVisible.value = false
                 if (currentLoadState.value != NONE) {
                     if (hasData) {
                         _currentLoadState.value = NONE

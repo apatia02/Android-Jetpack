@@ -10,7 +10,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * UseCase, который получает списко фильмов.
+ * UseCase, который получает список фильмов.
  */
 class GetMoviesUseCase @Inject constructor(
     private val moviesRepository: MovieRepository,
@@ -42,13 +42,12 @@ class GetMoviesUseCase @Inject constructor(
         })
 
     private fun String.formatRussianDate(): String {
-        if (this.isEmpty()) {
-            return EMPTY_STRING
-        }
-        val inputFormatter = DateTimeFormatter.ofPattern(ENGLISH_DATE_PATTERN, Locale.ENGLISH)
-        val date = LocalDate.parse(this, inputFormatter)
-        val outputFormatter = DateTimeFormatter.ofPattern(RUSSIAN_DATE_PATTERN, Locale(RUSSIAN))
-        return date.format(outputFormatter)
+        return runCatching {
+            val inputFormatter = DateTimeFormatter.ofPattern(ENGLISH_DATE_PATTERN, Locale.ENGLISH)
+            val date = LocalDate.parse(this, inputFormatter)
+            val outputFormatter = DateTimeFormatter.ofPattern(RUSSIAN_DATE_PATTERN, Locale(RUSSIAN))
+            date.format(outputFormatter)
+        }.getOrDefault(EMPTY_STRING)
     }
 
     private companion object {

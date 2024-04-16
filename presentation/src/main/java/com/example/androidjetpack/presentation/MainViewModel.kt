@@ -6,6 +6,8 @@ import androidx.paging.LoadState
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
@@ -36,9 +38,6 @@ class MainViewModel @Inject constructor(
     private val _currentLoadState = MutableStateFlow(NONE)
     val currentLoadState = _currentLoadState.asStateFlow()
 
-    private val _currentAdapterState = MutableStateFlow<LoadState>(LoadState.Loading)
-    private val currentAdapterState = _currentAdapterState.asStateFlow()
-
     private val _movies = MutableStateFlow(PagingData.empty<Movie>())
     val movies = _movies.asStateFlow()
 
@@ -50,8 +49,6 @@ class MainViewModel @Inject constructor(
 
     private val _query = MutableStateFlow(EMPTY_STRING)
     private val query = _query.asStateFlow()
-
-    var hasData = false
 
     var scrollPosition = 0
 
@@ -65,7 +62,6 @@ class MainViewModel @Inject constructor(
 
     fun setNewQuery(query: String) {
         queryJob?.cancel()
-        queryJob = null
         queryJob = viewModelScope.launch {
             if (query != _query.value) {
                 delay(UiConstants.TIMEOUT_FILTER)
@@ -80,30 +76,17 @@ class MainViewModel @Inject constructor(
                 getPagingMovies()
             }
         }
-        viewModelScope.launch {
-            currentAdapterState.collect {
-                renderAdapterState(it)
-            }
-        }
     }
 
-    fun refreshData() {
+    fun refreshData(isSwr: Boolean = false) {
         loadDataJob?.cancel()
-        loadDataJob = null
+        _isSwrVisible.value = isSwr
         loadDataJob = viewModelScope.launch {
             getPagingMovies(query.value)
         }
     }
 
-    fun setAdapterState(state: LoadState) {
-        _currentAdapterState.value = state
-    }
-
-    fun setSwrVisible() {
-        _isSwrVisible.value = true
-    }
-
-    private fun renderAdapterState(state: LoadState) {
+    fun renderAdapterState(state: LoadState, hasData: Boolean) {
         when (state) {
             is LoadState.Loading -> {
                 when {
@@ -129,15 +112,11 @@ class MainViewModel @Inject constructor(
                 } else {
                     _currentLoadState.value = ERROR
                 }
-                if (isSwrVisible.value) {
-                    _isSwrVisible.value = false
-                }
+                _isSwrVisible.value = false
             }
 
             is LoadState.NotLoading -> {
-                if (isSwrVisible.value) {
-                    _isSwrVisible.value = false
-                }
+                _isSwrVisible.value = false
                 if (currentLoadState.value != NONE) {
                     if (hasData) {
                         _currentLoadState.value = NONE
@@ -152,14 +131,20 @@ class MainViewModel @Inject constructor(
     private suspend fun getPagingMovies(query: String = _query.value) {
         val pager = Pager(config = PagingConfig(pageSize = PAGE_SIZE)) {
             MoviePagingSource(moviesUseCase, query)
-        }.flow
+        }.flow.cachedIn(viewModelScope)
         _movies.value = pager.first()
     }
 
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {
             changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
-            refreshData()
+            _movies.value = movies.value.map { movie ->
+                if (movie.id == movieId) {
+                    movie.copy(isFavourite = !movie.isFavourite)
+                } else {
+                    movie
+                }
+            }
         }
     }
 }

@@ -99,23 +99,18 @@ class MainActivityView : AppCompatActivity() {
 
     private fun setListeners() = with(binding) {
         filterEt.addTextChangedListener { newText ->
-            viewModel.hasData = movieAdapter.itemCount > 0
             viewModel.setNewQuery(newText.toString())
             clearFilterBtn.isGone = newText.toString().isEmpty()
         }
         clearFilterBtn.setOnClickListener { clearFilter() }
-        swipeRefresh.setOnRefreshListener {
-            viewModel.setSwrVisible()
-            viewModel.refreshData()
-        }
+        swipeRefresh.setOnRefreshListener { viewModel.refreshData(isSwr = true) }
         addAdapterListener()
         settingsIv.setOnClickListener { showThemeSelectionDialog() }
     }
 
     private fun addAdapterListener() {
         movieAdapter.addLoadStateListener { loadState ->
-            viewModel.hasData = movieAdapter.itemCount > 0
-            viewModel.setAdapterState(loadState.refresh)
+            viewModel.renderAdapterState(loadState.refresh, movieAdapter.itemCount > 0)
         }
     }
 

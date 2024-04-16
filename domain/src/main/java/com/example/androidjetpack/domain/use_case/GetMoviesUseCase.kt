@@ -10,7 +10,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * UseCase, который получает списко фильмов.
+ * UseCase, который получает список фильмов.
  */
 class GetMoviesUseCase @Inject constructor(
     private val moviesRepository: MovieRepository,

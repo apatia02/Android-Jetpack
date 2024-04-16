@@ -1,13 +1,17 @@
 package com.example.androidjetpack.presentation
 
+import android.app.Activity
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isGone
 import androidx.core.view.marginBottom
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
@@ -52,6 +56,7 @@ class MainActivityView : AppCompatActivity() {
         binding.container.insetKeyBoardMargin()
         setRecyclerView()
         setObservers()
+        setListeners()
     }
 
     /**
@@ -75,18 +80,37 @@ class MainActivityView : AppCompatActivity() {
         }
     }
 
+    private fun setListeners() = with(binding) {
+        filterEt.addTextChangedListener { newText ->
+            viewModel.setNewQuery(newText.toString())
+            clearFilterBtn.isGone = newText.toString().isEmpty()
+        }
+        clearFilterBtn.setOnClickListener { clearFilter() }
+    }
+
+    private fun clearFilter() = with(binding) {
+        filterEt.setText(EMPTY_STRING)
+        filterEt.clearFocus()
+        hideSoftKeyboard()
+    }
+
+    private fun hideSoftKeyboard() = with(binding) {
+        val imm =
+            container.context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(container.windowToken, 0)
+    }
+
     private fun setObservers() {
+        setMovieObserves()
+        setStateScreenObserves()
+    }
+
+    private fun setStateScreenObserves() {
         lifecycleScope.launch {
             viewModel.currentLoadState.collect { currentState ->
                 updateStatePresentation(currentState)
             }
         }
-        lifecycleScope.launch {
-            viewModel.movies.collect { movies ->
-                adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
-            }
-        }
-
         lifecycleScope.launch {
             viewModel.snackError.collect {
                 showSnackBar(getString(string.error_message_snack))
@@ -94,9 +118,18 @@ class MainActivityView : AppCompatActivity() {
         }
     }
 
-    private fun getMovies(query: String) {
+    private fun setMovieObserves() {
         lifecycleScope.launch {
-            viewModel.getMovies(query)
+            viewModel.movies.collect { movies ->
+                adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
+                binding.moviesRv.scrollToPosition(0)
+            }
+        }
+    }
+
+    private fun getMovies() {
+        lifecycleScope.launch {
+            viewModel.getMovies()
         }
     }
 
@@ -138,7 +171,7 @@ class MainActivityView : AppCompatActivity() {
 
             ERROR -> {
                 loadStatePresentation =
-                    ErrorStatePresentation(placeHolder) { getMovies(EMPTY_STRING) }
+                    ErrorStatePresentation(placeHolder) { getMovies() }
                 loadStatePresentation?.showState()
             }
         }

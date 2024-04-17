@@ -6,7 +6,8 @@
         <activity
             android:name=".MainActivityView"
             android:exported="true"
-            android:theme="@style/Theme.AndroidJetpack">
+            android:theme="@style/Theme.AndroidJetpack"
+            android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

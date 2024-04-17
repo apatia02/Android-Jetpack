@@ -50,6 +50,8 @@ class MainViewModel @Inject constructor(
     private val _query = MutableStateFlow(EMPTY_STRING)
     private val query = _query.asStateFlow()
 
+    var scrollPosition = 0
+
     private var loadDataJob: Job? = null
 
     private var queryJob: Job? = null

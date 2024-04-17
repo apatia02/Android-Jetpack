@@ -1,6 +1,7 @@
 package com.example.androidjetpack.presentation
 
 import android.app.Activity
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,8 @@ import androidx.core.view.isGone
 import androidx.core.view.marginBottom
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.presentation.adapter.MovieAdapter
@@ -56,11 +59,34 @@ class MainActivityView : AppCompatActivity() {
         init()
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) = with(binding) {
+        super.onConfigurationChanged(newConfig)
+        saveScrollPosition()
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            moviesRv.layoutManager = GridLayoutManager(this@MainActivityView, 2)
+        } else {
+            moviesRv.layoutManager = LinearLayoutManager(this@MainActivityView)
+        }
+        moviesRv.scrollToPosition(viewModel.scrollPosition)
+    }
+
     private fun init() {
         binding.container.insetKeyBoardMargin()
         setRecyclerView()
         setObservers()
         setListeners()
+    }
+
+    private fun saveScrollPosition() {
+        val layoutManager = binding.moviesRv.layoutManager
+        viewModel.scrollPosition = when (layoutManager) {
+            is GridLayoutManager -> {
+                layoutManager.findFirstVisibleItemPosition()
+            }
+
+            is LinearLayoutManager -> layoutManager.findFirstVisibleItemPosition()
+            else -> 0
+        }
     }
 
     /**

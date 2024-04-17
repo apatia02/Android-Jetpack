@@ -6,6 +6,7 @@ import com.example.androidjetpack.domain.EMPTY_STRING
 
 /**
  * Доменная модель фильма
+ * @property isFavourite Показывает, является ли фильм избранным.
  * @property adult Показывает, подходит ли фильм для взрослой аудитории.
  * @property backdropPath Путь к изображению фона фильма.
  * @property genreIds Список идентификаторов жанров, связанных с фильмом.

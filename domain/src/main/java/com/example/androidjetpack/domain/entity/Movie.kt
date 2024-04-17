@@ -3,6 +3,7 @@ package com.example.androidjetpack.domain.entity
 import com.example.androidjetpack.domain.DEFAULT_DOUBLE
 import com.example.androidjetpack.domain.DEFAULT_INT
 import com.example.androidjetpack.domain.EMPTY_STRING
+import java.io.Serializable
 
 /**
  * Доменная модель фильма
@@ -38,4 +39,4 @@ data class Movie(
     val video: Boolean = false,
     val voteAverage: Double = DEFAULT_DOUBLE,
     val voteCount: Int = DEFAULT_INT,
-)
+) : Serializable

@@ -8,4 +8,7 @@
     <string name="title_theme_dialog">Выберите тему</string>
     <string name="light_theme">Светлая</string>
     <string name="dark_theme">Темная</string>
+    <string name="language">Language</string>
+    <string name="description">Description</string>
+    <string name="rating">⭐ %s/10 IMDb</string>
 </resources>

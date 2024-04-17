@@ -11,7 +11,7 @@ import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.presentation.databinding.LayoutItemFilmBinding
 
 class MovieAdapter(
-    private val onClickListener: (String) -> Unit, private val changeFavouriteStatus: (Int) -> Unit
+    private val onClickListener: (Movie) -> Unit, private val changeFavouriteStatus: (Int) -> Unit
 ) : PagingDataAdapter<Movie, MovieAdapter.MovieViewHolder>(MovieDiffCallback) {
 
     companion object {
@@ -48,7 +48,7 @@ class MovieAdapter(
         }
 
         fun bind(
-            movie: Movie, onClickListener: (String) -> Unit, changeFavouriteStatus: (Int) -> Unit
+            movie: Movie, onClickListener: (Movie) -> Unit, changeFavouriteStatus: (Int) -> Unit
         ) = with(binding) {
             titleTv.text = movie.title
             descriptionTv.text = movie.description
@@ -57,10 +57,8 @@ class MovieAdapter(
             Glide.with(itemView).load(movie.posterPath).placeholder(drawable.placeholder)
                 .into(posterIv)
             dateTv.text = movie.releaseDate
-            container.setOnClickListener { onClickListener(movie.title) }
-            heartIv.setOnClickListener {
-                changeFavouriteStatus(movie.id)
-            }
+            container.setOnClickListener { onClickListener(movie) }
+            heartIv.setOnClickListener { changeFavouriteStatus(movie.id) }
         }
     }
 }

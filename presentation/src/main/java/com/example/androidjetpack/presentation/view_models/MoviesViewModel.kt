@@ -1,4 +1,4 @@
-package com.example.androidjetpack.presentation
+package com.example.androidjetpack.presentation.view_models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,8 +12,9 @@ import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
 import com.example.androidjetpack.domain.use_case.GetMoviesUseCase
-import com.example.androidjetpack.domain.use_case.GetThemeUseCase
 import com.example.androidjetpack.domain.use_case.SetThemeUseCase
+import com.example.androidjetpack.presentation.MoviePagingSource
+import com.example.androidjetpack.presentation.UiConstants
 import com.example.androidjetpack.presentation.UiConstants.PAGE_SIZE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
@@ -32,10 +33,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+class MoviesViewModel @Inject constructor(
     private val getMoviesUseCase: GetMoviesUseCase,
     private val changeFavouriteStatusUseCase: ChangeFavouriteStatusUseCase,
-    private val getThemeUseCase: GetThemeUseCase,
     private val setThemeUseCase: SetThemeUseCase
 ) : ViewModel() {
 
@@ -140,8 +140,6 @@ class MainViewModel @Inject constructor(
     }
 
     fun setTheme(mode: Int): Unit = setThemeUseCase.invoke(mode)
-
-    fun getTheme(): Int = getThemeUseCase.invoke()
 
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {

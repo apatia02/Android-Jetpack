@@ -19,13 +19,15 @@
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <ImageView
+                android:id="@+id/settings_iv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="26dp"
                 android:layout_marginTop="18dp"
                 android:contentDescription="@null"
                 android:elevation="5dp"
-                android:src="@drawable/search_icon" />
+                android:foreground="?android:selectableItemBackgroundBorderless"
+                android:src="@drawable/icon_settings" />
 
             <EditText
                 android:id="@+id/filter_et"
@@ -49,9 +51,9 @@
                 android:paddingStart="0dp"
                 android:paddingTop="18dp"
                 android:paddingEnd="26dp"
-                android:visibility="gone"
                 android:paddingBottom="10dp"
-                android:src="@drawable/close_icon" />
+                android:src="@drawable/close_icon"
+                android:visibility="gone" />
         </FrameLayout>
     </com.google.android.material.appbar.AppBarLayout>
 

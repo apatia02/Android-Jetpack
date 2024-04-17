@@ -10,9 +10,9 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * UseCase, который проставляет к спискам фильмам, являются ли они избранными.
+ * UseCase, который получает список фильмов.
  */
-class MoviesUseCase @Inject constructor(
+class GetMoviesUseCase @Inject constructor(
     private val moviesRepository: MovieRepository,
     private val favoriteMoviesRepository: FavoriteMoviesRepository
 ) {
@@ -20,7 +20,7 @@ class MoviesUseCase @Inject constructor(
     /**
      * Запрос на получение фильмов по фильтру, если фильтр пустой возвращает все фильмы
      */
-    suspend fun getMovies(query: String, page: Int): MovieList {
+    suspend operator fun invoke(query: String, page: Int): MovieList {
         val listMovie = if (query == EMPTY_STRING) {
             moviesRepository.getMovies(page)
         } else {

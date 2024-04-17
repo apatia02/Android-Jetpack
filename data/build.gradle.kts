@@ -13,4 +13,5 @@ dependencies {
     implementation(libs.roomKtx) // Room Coroutines
     kapt(libs.roomCompiler) // Room annotation processor
     implementation(libs.logging)
+    implementation(libs.appCompatLib)
 }

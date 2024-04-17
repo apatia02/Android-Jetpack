@@ -1,6 +1,7 @@
 package com.example.androidjetpack.presentation
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
@@ -8,6 +9,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
@@ -75,6 +77,7 @@ class MainActivityView : AppCompatActivity() {
         setRecyclerView()
         setObservers()
         setListeners()
+        AppCompatDelegate.setDefaultNightMode(viewModel.getTheme())
     }
 
     private fun saveScrollPosition() {
@@ -118,6 +121,7 @@ class MainActivityView : AppCompatActivity() {
         clearFilterBtn.setOnClickListener { clearFilter() }
         swipeRefresh.setOnRefreshListener { viewModel.refreshData(isSwr = true) }
         addAdapterListener()
+        settingsIv.setOnClickListener { showThemeSelectionDialog() }
     }
 
     private fun addAdapterListener() {
@@ -181,6 +185,26 @@ class MainActivityView : AppCompatActivity() {
             Snackbar.LENGTH_SHORT
         )
         snackBar.show()
+    }
+
+    private fun showThemeSelectionDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(getString(string.title_theme_dialog))
+        val themes = arrayOf(getString(string.light_theme), getString(string.dark_theme))
+        builder.setItems(themes) { _, which ->
+            when (which) {
+                0 -> setAppTheme(AppCompatDelegate.MODE_NIGHT_NO)
+                1 -> setAppTheme(AppCompatDelegate.MODE_NIGHT_YES)
+            }
+        }
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+    private fun setAppTheme(mode: Int) {
+        AppCompatDelegate.setDefaultNightMode(mode)
+        viewModel.setTheme(mode)
+        recreate()
     }
 
     private fun updateStatePresentation(currentState: LoadViewState) = with(binding) {

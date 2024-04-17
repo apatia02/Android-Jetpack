@@ -3,17 +3,14 @@ package com.example.androidjetpack.presentation
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.isGone
-import androidx.core.view.marginBottom
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -23,6 +20,8 @@ import com.example.androidjetpack.domain.EMPTY_STRING
 import com.example.androidjetpack.presentation.adapter.MovieAdapter
 import com.example.androidjetpack.presentation.adapter.MovieLoadStateAdapter
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
+import com.example.androidjetpack.presentation.extensions.insetKeyBoard
+import com.example.androidjetpack.presentation.extensions.insetStatusBar
 import com.example.androidjetpack.presentation.loading_state.ErrorStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadViewState
@@ -73,11 +72,17 @@ class MainActivityView : AppCompatActivity() {
     }
 
     private fun init() {
-        binding.container.insetKeyBoardMargin()
         setRecyclerView()
+        setInsets()
         setObservers()
         setListeners()
         AppCompatDelegate.setDefaultNightMode(viewModel.getTheme())
+        setBarsTransparent()
+    }
+
+    private fun setInsets() {
+        binding.container.insetStatusBar()
+        binding.placeHolder.insetKeyBoard()
     }
 
     private fun saveScrollPosition() {
@@ -89,27 +94,6 @@ class MainActivityView : AppCompatActivity() {
 
             is LinearLayoutManager -> layoutManager.findFirstVisibleItemPosition()
             else -> 0
-        }
-    }
-
-    /**
-     * метод, получающий inset клавиатуры и увеличивающий margin для view по этому inset
-     */
-    private fun View.insetKeyBoardMargin() {
-        val initialMargin = this.marginBottom
-        ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
-            val insetKeyBoard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            val insetNavBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            val margin = if (insetKeyBoard == 0) {
-                initialMargin
-            } else {
-                insetKeyBoard + initialMargin - insetNavBar
-            }
-            (view.layoutParams as? ViewGroup.MarginLayoutParams)?.apply {
-                bottomMargin = margin
-                view.layoutParams = this
-            }
-            insets
         }
     }
 
@@ -199,6 +183,12 @@ class MainActivityView : AppCompatActivity() {
         }
         val dialog = builder.create()
         dialog.show()
+    }
+
+    private fun setBarsTransparent() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
     }
 
     private fun setAppTheme(mode: Int) {

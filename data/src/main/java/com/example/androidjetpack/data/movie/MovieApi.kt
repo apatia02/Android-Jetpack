@@ -11,8 +11,8 @@ import retrofit2.http.Query
 internal interface MovieApi {
 
     @GET(MOVIE_URL)
-    suspend fun getMovies(): MovieListDto
+    suspend fun getMovies(@Query("page") page: Int): MovieListDto
 
     @GET(FILTERED_MOVIE_URL)
-    suspend fun searchMovies(@Query("query") query: String): MovieListDto
+    suspend fun searchMovies(@Query("query") query: String, @Query("page") page: Int): MovieListDto
 }

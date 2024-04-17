@@ -20,11 +20,11 @@ class MoviesUseCase @Inject constructor(
     /**
      * Запрос на получение фильмов по фильтру, если фильтр пустой возвращает все фильмы
      */
-    suspend fun getMovies(query: String): MovieList {
+    suspend fun getMovies(query: String, page: Int): MovieList {
         val listMovie = if (query == EMPTY_STRING) {
-            moviesRepository.getMovies()
+            moviesRepository.getMovies(page)
         } else {
-            moviesRepository.searchMovies(query)
+            moviesRepository.searchMovies(query, page)
         }
         return listMovie.setFavoriteStatusAndRussianDate()
     }

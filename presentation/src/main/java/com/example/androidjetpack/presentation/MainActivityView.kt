@@ -15,6 +15,8 @@ import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.example.androidjetpack.base_resources.R.string
 import com.example.androidjetpack.domain.EMPTY_STRING
+import com.example.androidjetpack.presentation.adapter.MovieAdapter
+import com.example.androidjetpack.presentation.adapter.MovieLoadStateAdapter
 import com.example.androidjetpack.presentation.databinding.ActivityMainViewBinding
 import com.example.androidjetpack.presentation.loading_state.ErrorStatePresentation
 import com.example.androidjetpack.presentation.loading_state.LoadStatePresentation
@@ -23,16 +25,14 @@ import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
-import com.example.androidjetpack.presentation.loading_state.LoadViewState.SWR_IS_NOT_VISIBLE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import com.example.androidjetpack.presentation.loading_state.MainLoadingStatePresentation
 import com.example.androidjetpack.presentation.loading_state.NotFoundStatePresentation
 import com.example.androidjetpack.presentation.loading_state.TransparentLoadingStatePresentation
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import ru.surfstudio.android.easyadapter.EasyAdapter
-import ru.surfstudio.android.easyadapter.ItemList
 
 @AndroidEntryPoint
 class MainActivityView : AppCompatActivity() {
@@ -43,11 +43,9 @@ class MainActivityView : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
-    private val adapter = EasyAdapter()
-
-    private val itemController =
-        MovieItemController(
-            onClickListener = { showSnackBar(message = it) },
+    private val movieAdapter =
+        MovieAdapter(
+            onClickListener = { showSnackBar(it) },
             changeFavouriteStatus = { viewModel.changeFavouriteStatus(movieId = it) }
         )
 
@@ -92,7 +90,14 @@ class MainActivityView : AppCompatActivity() {
             clearFilterBtn.isGone = newText.toString().isEmpty()
         }
         clearFilterBtn.setOnClickListener { clearFilter() }
-        swipeRefresh.setOnRefreshListener { getMovies(isSwr = true) }
+        swipeRefresh.setOnRefreshListener { viewModel.refreshData(isSwr = true) }
+        addAdapterListener()
+    }
+
+    private fun addAdapterListener() {
+        movieAdapter.addLoadStateListener { loadState ->
+            viewModel.renderAdapterState(loadState.refresh, movieAdapter.itemCount > 0)
+        }
     }
 
     private fun clearFilter() = with(binding) {
@@ -119,28 +124,28 @@ class MainActivityView : AppCompatActivity() {
             }
         }
         lifecycleScope.launch {
-            viewModel.snackError.collect {
+            viewModel.snackError.collectLatest {
                 showSnackBar(getString(string.error_message_snack))
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.isSwrVisible.collectLatest {
+                binding.swipeRefresh.isRefreshing = it
             }
         }
     }
 
     private fun setMovieObserves() {
         lifecycleScope.launch {
-            viewModel.movies.collect { movies ->
-                adapter.setItems(ItemList.create().addAll(movies.listMovie, itemController))
+            viewModel.movies.collectLatest {
+                movieAdapter.submitData(it)
             }
         }
     }
 
-    private fun getMovies(isSwr: Boolean = false) {
-        lifecycleScope.launch {
-            viewModel.getMovies(isSwr = isSwr)
-        }
-    }
-
     private fun setRecyclerView() {
-        binding.moviesRv.adapter = adapter
+        binding.moviesRv.adapter =
+            movieAdapter.withLoadStateFooter(footer = MovieLoadStateAdapter { movieAdapter.retry() })
     }
 
     private fun showSnackBar(message: String) {
@@ -156,10 +161,6 @@ class MainActivityView : AppCompatActivity() {
         when (currentState) {
             NONE -> {
                 loadStatePresentation?.hideState()
-            }
-
-            SWR_IS_NOT_VISIBLE -> {
-                swipeRefresh.isRefreshing = false
             }
 
             TRANSPARENT_LOADING -> {
@@ -181,7 +182,7 @@ class MainActivityView : AppCompatActivity() {
 
             ERROR -> {
                 loadStatePresentation =
-                    ErrorStatePresentation(placeHolder) { getMovies() }
+                    ErrorStatePresentation(placeHolder) { viewModel.refreshData() }
                 loadStatePresentation?.showState()
             }
         }

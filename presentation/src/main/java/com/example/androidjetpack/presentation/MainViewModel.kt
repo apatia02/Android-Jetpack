@@ -2,15 +2,21 @@ package com.example.androidjetpack.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.LoadState
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.example.androidjetpack.domain.EMPTY_STRING
-import com.example.androidjetpack.domain.entity.MovieList
+import com.example.androidjetpack.domain.entity.Movie
 import com.example.androidjetpack.domain.use_case.ChangeFavouriteStatusUseCase
 import com.example.androidjetpack.domain.use_case.MoviesUseCase
+import com.example.androidjetpack.presentation.UiConstants.PAGE_SIZE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.ERROR
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.MAIN_LOADING
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NONE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.NOTHING_FOUND
-import com.example.androidjetpack.presentation.loading_state.LoadViewState.SWR_IS_NOT_VISIBLE
 import com.example.androidjetpack.presentation.loading_state.LoadViewState.TRANSPARENT_LOADING
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -19,6 +25,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,17 +38,19 @@ class MainViewModel @Inject constructor(
     private val _currentLoadState = MutableStateFlow(NONE)
     val currentLoadState = _currentLoadState.asStateFlow()
 
-    private val _movies = MutableStateFlow(MovieList())
+    private val _movies = MutableStateFlow(PagingData.empty<Movie>())
     val movies = _movies.asStateFlow()
 
     private val _snackError = MutableSharedFlow<Unit>()
     val snackError = _snackError.asSharedFlow()
 
+    private val _isSwrVisible = MutableStateFlow(false)
+    val isSwrVisible = _isSwrVisible.asStateFlow()
+
     private val _query = MutableStateFlow(EMPTY_STRING)
     private val query = _query.asStateFlow()
 
-    private val hasData: Boolean
-        get() = _movies.value.listMovie.isNotEmpty()
+    private var loadDataJob: Job? = null
 
     private var queryJob: Job? = null
 
@@ -62,58 +71,78 @@ class MainViewModel @Inject constructor(
     private fun initObservers() {
         viewModelScope.launch {
             query.collect {
-                getMovies()
+                getPagingMovies()
             }
         }
     }
 
-    suspend fun getMovies(isSwr: Boolean = false) {
-        try {
-            when {
-                isSwr -> _currentLoadState.value = NONE
-                hasData -> _currentLoadState.value = TRANSPARENT_LOADING
-                else -> _currentLoadState.value = MAIN_LOADING
+    fun refreshData(isSwr: Boolean = false) {
+        loadDataJob?.cancel()
+        _isSwrVisible.value = isSwr
+        loadDataJob = viewModelScope.launch {
+            getPagingMovies(query.value)
+        }
+    }
+
+    fun renderAdapterState(state: LoadState, hasData: Boolean) {
+        when (state) {
+            is LoadState.Loading -> {
+                when {
+                    isSwrVisible.value -> {
+                        _currentLoadState.value = NONE
+                    }
+
+                    hasData -> {
+                        _currentLoadState.value = TRANSPARENT_LOADING
+                    }
+
+                    else -> {
+                        _currentLoadState.value = MAIN_LOADING
+                    }
+                }
             }
-            _movies.value = moviesUseCase.getMovies(query.value)
-            if (hasData) {
-                _currentLoadState.value = NONE
-            } else {
-                _currentLoadState.value = NOTHING_FOUND
+
+            is LoadState.Error -> {
+                if (hasData) {
+                    viewModelScope.launch {
+                        _snackError.emit(Unit)
+                    }
+                } else {
+                    _currentLoadState.value = ERROR
+                }
+                _isSwrVisible.value = false
             }
-        } catch (e: Exception) {
-            if (hasData) {
-                showSnackError()
-                _currentLoadState.value = NONE
-            } else {
-                _currentLoadState.value = ERROR
-            }
-        } finally {
-            if (isSwr) {
-                _currentLoadState.value = SWR_IS_NOT_VISIBLE
+
+            is LoadState.NotLoading -> {
+                _isSwrVisible.value = false
+                if (currentLoadState.value != NONE) {
+                    if (hasData) {
+                        _currentLoadState.value = NONE
+                    } else {
+                        _currentLoadState.value = NOTHING_FOUND
+                    }
+                }
             }
         }
     }
 
-    private fun showSnackError() {
-        viewModelScope.launch {
-            _snackError.emit(Unit)
-        }
+    private suspend fun getPagingMovies(query: String = _query.value) {
+        val pager = Pager(config = PagingConfig(pageSize = PAGE_SIZE)) {
+            MoviePagingSource(moviesUseCase, query)
+        }.flow.cachedIn(viewModelScope)
+        _movies.value = pager.first()
     }
 
     fun changeFavouriteStatus(movieId: Int) {
         viewModelScope.launch {
             changeFavouriteStatusUseCase.changeFavouriteStatus(movieId)
-            _movies.value = movies.value.changeFavouriteStatus(movieId)
-        }
-    }
-
-    private fun MovieList.changeFavouriteStatus(movieId: Int): MovieList {
-        return copy(listMovie = listMovie.map { movie ->
-            if (movie.id == movieId) {
-                movie.copy(isFavourite = !movie.isFavourite)
-            } else {
-                movie
+            _movies.value = movies.value.map { movie ->
+                if (movie.id == movieId) {
+                    movie.copy(isFavourite = !movie.isFavourite)
+                } else {
+                    movie
+                }
             }
-        })
+        }
     }
 }
